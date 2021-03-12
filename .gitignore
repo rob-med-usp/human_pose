@@ -134,5 +134,9 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
+# Large files
+*.pth
+*.pb
+
 # Cython debug symbols
 cython_debug/
