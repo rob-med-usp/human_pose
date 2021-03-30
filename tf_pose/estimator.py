@@ -99,7 +99,7 @@ class Human:
         _REar = CocoPart.REar.value
         _LEar = CocoPart.LEar.value
 
-        _THRESHOLD_PART_CONFIDENCE = 0.2
+        _THRESHOLD_PART_CONFIDENCE = 0.1
         parts = [part for idx, part in self.body_parts.items() if part.score > _THRESHOLD_PART_CONFIDENCE]
 
         is_nose, part_nose = _include_part(parts, _NOSE)

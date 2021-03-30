@@ -180,9 +180,9 @@ class RsHumanPose:
         self.ax.set_ylabel('Y Label')
         self.ax.set_zlabel('Z Label')
         
-        self.ax.set_xlim(-1,1)
-        self.ax.set_ylim(-1,1)
-        self.ax.set_zlim(0,4)
+        self.ax.set_xlim(-1, 1)
+        self.ax.set_ylim(0, 4)
+        self.ax.set_zlim(-2, 2)
 
         x, y, z = [], [], []
         for body in range(len(self.keypoints_3d[id])):
@@ -191,6 +191,8 @@ class RsHumanPose:
                 y.append(self.keypoints_3d[id][body][1])
                 z.append(self.keypoints_3d[id][body][2])
 
+        
+        # Draw bones
         for human in self.humans:
             for pair_order, pair in enumerate(common.CocoPairsRender):
 
@@ -205,10 +207,30 @@ class RsHumanPose:
                 y2 = self.keypoints_3d[id][pair[1]][1]
                 z2 = self.keypoints_3d[id][pair[1]][2]
 
-                self.ax.plot([x1, x2],[y1, y2],[z1, z2])
+                self.ax.plot([x1, x2],[z1, z2] ,[-y1, -y2])
 
-        self.ax.scatter(x, y, z)
+        # filtered_kpts = np.array([x,y,z])
+        
+        # rotation_x = np.array([[1, 0, 0 ],
+        #                        [0, 0, -1],
+        #                        [0, 1, 0 ]])
 
+        # if filtered_kpts.shape[1] != 0:
+        #     rotated_kpts = np.dot(rotation_x, filtered_kpts)
+
+        #     print(rotated_kpts.shape)
+        #     x = rotated_kpts[:,0][:]
+        #     y = rotated_kpts[:,1][:]
+        #     z = rotated_kpts[:,2][:]
+
+            # Draw keypoints
+        x = np.array(x)
+        y = np.array(y)
+        z = np.array(z)
+        self.ax.scatter(x, z, -y)
+        #self.ax.scatter(x, y, z)
+
+        # Display 3D plot
         plt.draw()
         plt.show(block=False)
         plt.pause(0.001)
