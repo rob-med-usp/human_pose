@@ -209,20 +209,6 @@ class RsHumanPose:
 
                 self.ax.plot([x1, x2],[z1, z2] ,[-y1, -y2])
 
-        # filtered_kpts = np.array([x,y,z])
-        
-        # rotation_x = np.array([[1, 0, 0 ],
-        #                        [0, 0, -1],
-        #                        [0, 1, 0 ]])
-
-        # if filtered_kpts.shape[1] != 0:
-        #     rotated_kpts = np.dot(rotation_x, filtered_kpts)
-
-        #     print(rotated_kpts.shape)
-        #     x = rotated_kpts[:,0][:]
-        #     y = rotated_kpts[:,1][:]
-        #     z = rotated_kpts[:,2][:]
-
             # Draw keypoints
         x = np.array(x)
         y = np.array(y)
@@ -234,8 +220,7 @@ class RsHumanPose:
         plt.draw()
         plt.show(block=False)
         plt.pause(0.001)
-
-        #plt.show()
+        
 
     def setMessage(self, human_pose, id=0):
 
