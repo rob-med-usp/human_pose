@@ -1,6 +1,4 @@
-# Foobar
-
-Human Pose Estimation - HPE **WITH KEYPOINT-RCNN**
+# Human Pose Estimation - HPE **WITH KEYPOINT-RCNN**
 
 ## Description
 
