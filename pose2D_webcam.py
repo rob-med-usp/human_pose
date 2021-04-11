@@ -48,12 +48,6 @@ def draw_keypoints(outputs, image):
             continue
     return image
 
-#parser = argparse.ArgumentParser()
-#parser.add_argument('-i', '--input', required=True,
-#                    help='path to the input data')
-#args = vars(parser.parse_args())
-
-# transform to convert the image to tensor
 transform = transforms.Compose([
     transforms.ToTensor()
 ])
