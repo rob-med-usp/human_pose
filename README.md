@@ -18,7 +18,7 @@ pip install opencv-contrib-python matplotlib numpy Pillow
 ## Usage
 
 ```python
-python pose2D_depth.py
+python pose2D_webcam.py
 ```
 
 ## Contributing
