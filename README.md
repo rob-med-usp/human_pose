@@ -4,8 +4,8 @@
 
 Two models implemented
 
+* **Keypoint RCNN** (you are here)
 * OpenPose
-* Keypoint RCC
 
 ## Installation
 
