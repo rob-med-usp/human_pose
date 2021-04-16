@@ -48,11 +48,11 @@ class Pose2D_RCNN:
 
         if not ret:
             print("Error trying to get frame.")
-            return False, []
+            return []
 
         self.frame = frame
 
-        return True, self.frame
+        return self.frame
 
 
     def predictFrame(self, frame):
