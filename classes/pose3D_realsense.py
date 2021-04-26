@@ -164,18 +164,21 @@ class Pose3D_RealSense:
     
     def getPose3D(self, keypoints2D):
         
-        self.keypoints2D = keypoints2D
+        try:
+            self.keypoints2D = keypoints2D
         
-        self.keypoints3D = np.ones((10, 17, 3)) * (-1)
-        
-        for id in range(len(keypoints2D)):
-            for keypoint in range(len(keypoints2D[id])):
-                if(keypoints2D[id][keypoint][0] != -1):
-                    x = np.int(keypoints2D[id][keypoint][0])
-                    y = np.int(keypoints2D[id][keypoint][1])
-                    self.keypoints3D[id][keypoint] = rs.rs2_deproject_pixel_to_point(self.color_intrin, [x,y], self.depth_frame.get_distance(x, y))
-                else:
-                    self.keypoints3D[id][keypoint] = np.array([-1, -1, -1])
+            self.keypoints3D = np.ones((10, 17, 3)) * (-1)
+            
+            for id in range(len(keypoints2D)):
+                for keypoint in range(len(keypoints2D[id])):
+                    if(keypoints2D[id][keypoint][0] != -1):
+                        x = np.int(keypoints2D[id][keypoint][0])
+                        y = np.int(keypoints2D[id][keypoint][1])
+                        self.keypoints3D[id][keypoint] = rs.rs2_deproject_pixel_to_point(self.color_intrin, [x,y], self.depth_frame.get_distance(x, y))
+                    else:
+                        self.keypoints3D[id][keypoint] = np.array([-1, -1, -1])
+        except Exception as e: 
+            print(e)
     
     def plotPose3DbyID(self, id):
         
@@ -360,10 +363,17 @@ class Pose3D_RealSense:
         # Create colorizer object
         self.colorizer_bag = rs.colorizer()
         
+        # Create an align object
+        align_to = rs.stream.color
+        self.align = rs.align(align_to)
+        
     def getBagFrames(self):
         
         # Get frame set
         frames = self.pipeline_bag.wait_for_frames()
+        
+        # Align frames
+        frames = self.align.process(frames)
         
         # Get depth and color frame
         self.depth_frame = frames.get_depth_frame()

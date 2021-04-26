@@ -18,10 +18,10 @@ while True:
     
     keypoints2D, person_scores = rcnn.getKeypointsAndPersonScores()
     
-    #realsense.getPose3D(keypoints2D)
+    realsense.getPose3D(keypoints2D)
     
     realsense.showFrames()
     
     #realsense.printValues()
     
-    #realsense.plotPose3DbyID(0)
+    realsense.plotPose3DbyID(0)
