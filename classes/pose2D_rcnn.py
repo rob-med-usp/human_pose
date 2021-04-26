@@ -33,7 +33,7 @@ class Pose2D_RCNN:
         self.model.to(self.device).eval()
         # initialize transform obj
         self.transform = transforms.Compose([transforms.ToTensor()])
-    
+
     def setWebcam(self, cam):
 
         self.cam = cv2.VideoCapture(cam)
@@ -54,7 +54,6 @@ class Pose2D_RCNN:
 
         return self.frame
 
-
     def predictFrame(self, frame):
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -72,18 +71,22 @@ class Pose2D_RCNN:
         
         return self.outputs
 
+    def getKeypoint2DArray(self):
+        pass
+
     def drawSkeleton(self, frame, outputs):
 
         # the `outputs` is list which in-turn contains the dictionaries
         for i in range(len(outputs[0]['keypoints'])):
             keypoints = outputs[0]['keypoints'][i].cpu().detach().numpy()
             # proceed to draw the lines if the confidence score is above 0.9
-            if outputs[0]['scores'][i] > 0.975:
+            if outputs[0]['scores'][i] > 0.60:
                 keypoints = keypoints[:, :].reshape(-1, 3)
                 for p in range(keypoints.shape[0]):
                     # draw the keypoints
-                    cv2.circle(frame, (int(keypoints[p, 0]), int(keypoints[p, 1])),
-                                3, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
+                    if (keypoints[p, 2] == 1):
+                        cv2.circle(frame, (int(keypoints[p, 0]), int(keypoints[p, 1])),
+                                    3, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
                     # uncomment the following lines if you want to put keypoint number
                     # cv2.putText(image, f"{p}", (int(keypoints[p, 0]+10), int(keypoints[p, 1]-5)),
                     #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
@@ -101,14 +104,25 @@ class Pose2D_RCNN:
                 continue
         return frame
 
-    def showImage(self, frame, with_FPS = True):
+    def showImage(self, frame, with_FPS = True, block = False):
 
         cv2.putText(frame, str(round(1/self.inference_time,2)), (30, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
         cv2.imshow("Result",frame)
 
-        if cv2.waitKey(1) == 27:
-#            break
-            return False
+        if not block:
+            if cv2.waitKey(1) == 27:
+                #break
+                return False
+        
+        if block:
+            cv2.waitKey()  
 
-    def run():
-        pass
+    def getKeypointsAndPersonScores(self):
+        
+        # Get keypoints
+        self.keypoints2D = np.asanyarray(self.outputs[0]['keypoints'])
+        
+        # Get scores
+        self.person_scores = np.asanyarray(self.outputs[0]['scores'])
+        
+        return self.keypoints2D, self.person_scores
