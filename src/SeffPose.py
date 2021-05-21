@@ -101,6 +101,25 @@ class SeffPose:
         
     def bridge2D(self, keypoints2D_output, output_format='MPI'):
         
+    # Stacked Hourglass produces 16 joints. These are the names. Ref:https://github.com/una-dinosauria/3d-pose-baseline/blob/666080d86a96666d499300719053cc8af7ef51c8/src/data_utils.py#L16
+    # Seff uses MPI keypoints w/ 16 joints in this order
+    # [0]'RFoot'
+    # [1]'RKnee'
+    # [2]'RHip'
+    # [3]'LHip'
+    # [4]'LKnee'
+    # [5]'LFoot'
+    # [6]'Hip'
+    # [7]'Spine'
+    # [8]'Thorax'
+    # [9]'Head'
+    # [10]'RWrist'
+    # [11]'RElbow'
+    # [12]'RShoulder'
+    # [13]'LShoulder'
+    # [14]'LElbow'
+    # [15]'LWrist'
+        
         if(output_format=='MPI'):
             pelvis = keypoints2D_output[8]/2 + keypoints2D_output[11]/2
             self.keypoints2D_Baseline = np.array([keypoints2D_output[10], keypoints2D_output[9], keypoints2D_output[8],
@@ -131,6 +150,9 @@ class SeffPose:
         meanMat = np.repeat(meanMat, T, axis=0)
         orig_data = np.multiply(orig_data, stdMat) + meanMat
         return orig_data
+    
+    def COCOtoMPI(self, keypoints2D_COCO):
+        
 
     def estimatePose3Dfrom2DKeypoints(self, keypoints2D):
         
