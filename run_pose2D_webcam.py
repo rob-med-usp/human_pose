@@ -1,16 +1,19 @@
-import classes.pose2D_rcnn as pose2D 
+from src.KeypointRCNN import * 
+from src.Visualizer import *
 
-rcnn = pose2D.Pose2D_RCNN()
+pose2d = KeypointRCNN()
+viz = Visualizer()
 
-rcnn.defineModel()
-rcnn.setWebcam(0)
+pose2d.defineModel()
+
+viz.initWindows()
+viz.setWebcam(0)
 
 while True:
-
-    frame = rcnn.getWebcamFrame()
-    outputs = rcnn.predictFrame(frame)
-    image = rcnn.drawSkeleton(frame, outputs)
-    rcnn.showImage(frame)
+    frame = viz.getWebcamFrame()
+    keypoints, scores = pose2d.predictFrame(frame)
+    pose2d.drawSkeleton(frame, keypoints, scores)
+    viz.showImage(frame=frame)
 
 
 

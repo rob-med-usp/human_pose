@@ -1,25 +1,16 @@
-import classes.pose2D_rcnn as pose2D 
-import cv2
-import os
+from src.KeypointRCNN import * 
+from src.Visualizer import *
 
-images_path = "img/"
+pose2d = KeypointRCNN()
+viz = Visualizer()
 
-rcnn = pose2D.Pose2D_RCNN()
+pose2d.defineModel()
+viz.initWindows()
 
-rcnn.defineModel()
+fname = "000000.png"
 
-for name in os.listdir(images_path):
-
-    image = cv2.imread(images_path + name)
-    
-    outputs = rcnn.predictFrame(image)
-
-    print(len(outputs[0]['keypoints']))
-    print(outputs[0]['keypoints'])
-    print(outputs[0]['labels'])
-    print(outputs[0]['scores'])
-
-    image = rcnn.drawSkeleton(image, outputs)
-
-    #image = cv2.resize(image, (int(image.shape[1]*0.5),int(image.shape[0]*0.5)))
-    rcnn.showImage(image, block = True)
+#image = viz.getImagefromFile(fname)
+image = cv2.imread(fname)
+keypoints, scores = pose2d.predictFrame(image)
+pose2d.drawSkeleton(image, keypoints, scores)
+viz.showImage(frame=image, block=True)
