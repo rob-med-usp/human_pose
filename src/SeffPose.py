@@ -227,7 +227,7 @@ class SeffPose:
         head_center = nose + r_ear + l_ear + r_eye + l_eye
         head_center = head_center/5
         vector_head = head_center - upper_neck
-        head_top = upper_neck + 2*vector_head
+        head_top = upper_neck + 1.5*vector_head
         
         # Init MPII kpts
         keypoints2D_MPII = np.zeros((16,2))
@@ -255,7 +255,8 @@ class SeffPose:
     def estimatePose3Dfrom2DKeypoints(self, keypoints2D):
         
         keypoints2D = self.COCOtoMPII(keypoints2D)
-    
+        self.keypoints2D = keypoints2D
+        
         keypoints2D = np.reshape(keypoints2D, (1,32))
         
         keypoints2D = keypoints2D.astype(np.float32)
@@ -274,6 +275,9 @@ class SeffPose:
         
         return keypoints3D
 
+    def getMPIIKeypoints(self):
+        return self.keypoints2D
+    
     def getRawOutputs(self):
         return self.outputs
     
