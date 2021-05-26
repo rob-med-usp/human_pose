@@ -96,10 +96,11 @@ class Visualizer:
 
         self.inference_time = time.time() - self.frame_tick
         cv2.putText(self.frame, str(round(1/self.inference_time,2)), (30, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
+        frame = cv2.resize(frame, (int(frame.shape[1]*0.7), int(frame.shape[0]*0.7)))
         cv2.imshow(self.win_name_rgb,frame)
 
         if not block:
-            if cv2.waitKey(1) == 27:
+            if cv2.waitKey(100) == 27:
                 quit()
 
         if block:
@@ -188,7 +189,7 @@ class Visualizer:
         # Make connection matrix
         for i in np.arange( len(I) ):
             xline, yline, zline = [np.array( [outputs[I[i], j], outputs[J[i], j]] ) for j in range(3)]
-            self.ax.plot(xline, -zline, -yline, lw=2, c=lcolor if LR[i] else rcolor)
+            self.ax.plot(xline, zline, yline, lw=2, c=lcolor if LR[i] else rcolor)
 
         # for i in :
 
@@ -204,7 +205,7 @@ class Visualizer:
         y = np.array(y)
         z = np.array(z)
         #ax.scatter(x, z, -y)
-        self.ax.scatter(x, -z, -y)
+        self.ax.scatter(x, z, y)
         plt.draw()
         plt.show()
         plt.pause(-1)

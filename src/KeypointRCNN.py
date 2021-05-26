@@ -33,7 +33,7 @@ class KeypointRCNN:
         self.model.to(self.device).eval()
         # initialize transform obj
         self.transform = transforms.Compose([transforms.ToTensor()])
-
+    
     def predictFrame(self, frame):
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -49,45 +49,69 @@ class KeypointRCNN:
             self.outputs = self.model(image)
         self.inference_time = time.time() - t0
         
-        return self._getKeypointsAndPersonScores()
+        persons, scores = self._getKeypointsAndPersonScores()
+        
+        persons = self._filterPersonsbyScore(persons, scores, min_thresh = 0.95)
+        
+        return persons
 
     # TODO: Recieve keypoints instead outputs
-    def drawSkeleton(self, frame, persons, scores):
+    def drawSkeleton(self, frame, persons):
 
         # the `outputs` is list which in-turn contains the dictionaries
         for i in range(len(persons)):
+            
             keypoints = persons[i]
             # proceed to draw the lines if the confidence score is above 0.9
-            if scores[i] > 0.60:
-                keypoints = keypoints[:, :].reshape(-1, 3)
-                for p in range(keypoints.shape[0]):
-                    # draw the keypoints
-                    if (keypoints[p, 2] == 1):
-                        cv2.circle(frame, (int(keypoints[p, 0]), int(keypoints[p, 1])),
-                                    3, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
-                    # uncomment the following lines if you want to put keypoint number
-                    # cv2.putText(image, f"{p}", (int(keypoints[p, 0]+10), int(keypoints[p, 1]-5)),
-                    #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-                for ie, e in enumerate(self.edges):
-                    # get different colors for the edges
-                    rgb = matplotlib.colors.hsv_to_rgb([
-                        ie/float(len(self.edges)), 1.0, 1.0
-                    ])
-                    rgb = rgb*255
-                    # join the keypoint pairs to draw the skeletal structure
-                    cv2.line(frame, (keypoints[e, 0][0], keypoints[e, 1][0]),
-                            (keypoints[e, 0][1], keypoints[e, 1][1]),
-                            tuple(rgb), 2, lineType=cv2.LINE_AA)
+            keypoints = keypoints[:, :].reshape(-1, 2)
+            for p in range(keypoints.shape[0]):
+                # draw the keypoints
+                cv2.circle(frame, (int(keypoints[p, 0]), int(keypoints[p, 1])), 3, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
+                # uncomment the following lines if you want to put keypoint number
+                # cv2.putText(image, f"{p}", (int(keypoints[p, 0]+10), int(keypoints[p, 1]-5)),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+            for ie, e in enumerate(self.edges):
+                # get different colors for the edges
+                rgb = matplotlib.colors.hsv_to_rgb([
+                    ie/float(len(self.edges)), 1.0, 1.0
+                ])
+                rgb = rgb*255
+                # join the keypoint pairs to draw the skeletal structure
+                cv2.line(frame, (keypoints[e, 0][0], keypoints[e, 1][0]),
+                        (keypoints[e, 0][1], keypoints[e, 1][1]),
+                        tuple(rgb), 2, lineType=cv2.LINE_AA)
             else:
                 continue
         return frame
 
+    #TODO
+    def normalizeKeypoints(self, image, keypoints2D):
+        
+        W = image.shape[1]
+        H = image.shape[0]
+        keypoints2D_norm = np.zeros((16,2))
+        keypoints2D_norm[:, 0] = keypoints2D[:, 0] / W
+        keypoints2D_norm[:, 1] = keypoints2D[:, 1] / H
+        
+        return keypoints2D_norm
+    
+    def _filterPersonsbyScore(self, persons, scores, min_thresh = 0.9):
+        persons_filtered = []
+        for i in range(len(scores)):
+            if scores[i] > min_thresh:
+                persons_filtered.append(persons[i])
+        
+        return persons_filtered
+        
     def _getKeypointsAndPersonScores(self):
         
         # Get keypoints
-        self.keypoints2D = np.asanyarray(self.outputs[0]['keypoints'])
+        self.persons = np.asanyarray(self.outputs[0]['keypoints'])
         
         # Get scores
         self.person_scores = np.asanyarray(self.outputs[0]['scores'])
         
-        return self.keypoints2D, self.person_scores
+        # Remove visibility collum
+        self.persons = self.persons[:,:,:2]
+        
+        return self.persons, self.person_scores

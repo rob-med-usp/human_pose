@@ -1,4 +1,5 @@
 from typing import KeysView
+from numpy.core.arrayprint import _make_options_dict
 import torch
 import torchvision
 import torch.nn as nn
@@ -90,9 +91,9 @@ class SeffPose:
     def defineModel(self):
 
         self.model = LinearModel()
-        ckpt = torch.load(os.getcwd() + '/models/ckpt_best.pth.tar')
+        ckpt = torch.load(os.getcwd() + '/models/seffpose/ckpt_best.pth.tar', map_location=torch.device('cpu'))
         # load statistics data
-        self.stat_3d = torch.load(os.getcwd() + '/models/stat_3d.pth.tar')
+        self.stat_3d = torch.load(os.getcwd() + '/models/seffpose/stat_3d.pth.tar')
 
         self.model.eval()
         # print(stat_3d.keys())
@@ -231,7 +232,7 @@ class SeffPose:
         
         # Init MPII kpts
         keypoints2D_MPII = np.zeros((16,2))
-        print(r_ankle)
+        
         # Set array
         keypoints2D_MPII[0] = r_ankle
         keypoints2D_MPII[1] = r_knee
@@ -254,8 +255,8 @@ class SeffPose:
         
     def estimatePose3Dfrom2DKeypoints(self, keypoints2D):
         
-        keypoints2D = self.COCOtoMPII(keypoints2D)
-        self.keypoints2D = keypoints2D
+        #keypoints2D = self.COCOtoMPII(keypoints2D)
+        #self.keypoints2D = keypoints2D
         
         keypoints2D = np.reshape(keypoints2D, (1,32))
         

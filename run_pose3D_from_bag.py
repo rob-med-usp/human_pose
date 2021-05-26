@@ -4,7 +4,7 @@ import classes.pose3D_realsense as pose3D
 import numpy as np
 
 rcnn = pose2D.Pose2D_RCNN()
-realsense = pose3D.Pose3D_RealSense(ros_pub = False, from_bag_file = True, path_to_bag = '/home/gui-soares/soares_repo/RS-bag-files/test1.bag')
+realsense = pose3D.Pose3D(ros_pub = False, from_bag_file = True, path_to_bag = '/home/gui-soares/soares_repo/RS-bag-files/test1.bag')
 
 rcnn.defineModel()
 
@@ -18,7 +18,7 @@ while True:
     
     keypoints2D, person_scores = rcnn.getKeypointsAndPersonScores()
     
-    realsense.getPose3D(keypoints2D)
+    realsense.deprojectPose3D(keypoints2D)
     
     realsense.showFrames()
     
