@@ -137,6 +137,10 @@ dmypy.json
 # Large files
 *.pth
 *.pb
+*.caffemodel
+*.prototxt
+*.pth.tar
+*.tar
 
 # Cython debug symbols
 cython_debug/
