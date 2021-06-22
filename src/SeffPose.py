@@ -1,5 +1,8 @@
+from pickle import HIGHEST_PROTOCOL
 from typing import KeysView
 from numpy.core.arrayprint import _make_options_dict
+from numpy.lib.utils import _split_line
+from numpy.testing._private.nosetester import NoseTester
 import torch
 import torchvision
 import torch.nn as nn
@@ -41,10 +44,11 @@ class Linear(nn.Module):
         return out
 
 class LinearModel(nn.Module):
+    
     def __init__(self,
-                 linear_size=1024,
-                 num_stage=2,
-                 p_dropout=0.5):
+                linear_size=1024,
+                num_stage=2,
+                p_dropout=0.5):
         super(LinearModel, self).__init__()
 
         self.linear_size = linear_size
@@ -87,79 +91,169 @@ class LinearModel(nn.Module):
         return y
 
 class SeffPose:
+    def __init__(self):
+        
+        self.use_cuda = torch.cuda.is_available()
+        
+                # Full mean per joints for all 17 that HUMAN3.6M has
+        self.full_gtposeHM36m2D_mean = np.array([
+                [532.08406529, 419.70004286],
+                [532.29762931, 421.26396034],
+                [531.93837415, 494.71912543],
+                [529.71838862, 578.96493594],
+                [531.80992425, 418.23858125],
+                [530.68476821, 493.53829669],
+                [529.3695928 , 575.96907295],
+                [532.9368693 , 370.6273594 ],
+                [534.11021786, 317.87395159],
+                [534.55449896, 304.20719197],
+                [534.86981418, 282.27538728],
+                [534.11269724, 330.08322252],
+                [533.53517702, 376.24164594],
+                [533.49227803, 391.70207981],
+                [533.52619558, 330.06556364],
+                [532.50905212, 374.16059134],
+                [532.72893539, 380.60538419]])
+        
+        # Full standard deviation per joints for all 17 that HUMAN3.6M has
+        self.full_gtposeHM36m2D_std =  np.array(
+                [[107.71979663, 63.35148791],
+                [101.94373457, 62.88696832],
+                [106.23227544, 48.41074155],
+                [108.45089997, 54.58495702],
+                [118.99125297, 64.11214135],
+                [119.10602351, 50.53679963],
+                [120.5990632 , 56.38689222],
+                [109.0578714 , 68.6936446 ],
+                [111.18250122, 74.86112372],
+                [111.61261415, 77.79330958],
+                [113.20325395, 79.89477859],
+                [105.69981542, 73.2588583 ],
+                [107.05346824, 73.92571615],
+                [107.98747907, 83.29661543],
+                [121.58758131, 74.24605525],
+                [134.32906881, 77.47220667],
+                [131.80190209,  89.8535445]])
+        
+    def HUMAN36MtoMPIIstats(self, keypoints2D_HM36m):
+        
+        hip        = keypoints2D_HM36m[0]
+        r_hip      = keypoints2D_HM36m[1]
+        r_knee     = keypoints2D_HM36m[2]
+        r_ankle    = keypoints2D_HM36m[3]
+        l_hip      = keypoints2D_HM36m[4]
+        l_knee     = keypoints2D_HM36m[5]
+        l_ankle    = keypoints2D_HM36m[6]
+        spine      = keypoints2D_HM36m[7]
+        mid_thorax = keypoints2D_HM36m[8]
+        nose       = keypoints2D_HM36m[9] 
+        head_top   = keypoints2D_HM36m[10]
+        l_shoulder = keypoints2D_HM36m[11] 
+        l_elbow    = keypoints2D_HM36m[12]
+        l_wrist    = keypoints2D_HM36m[13]
+        r_shoulder = keypoints2D_HM36m[14]
+        r_elbow    = keypoints2D_HM36m[15]
+        r_wrist    = keypoints2D_HM36m[16]
+        
+        # Init MPII kpts
+        keypoints2D_MPII = np.zeros((16,2))
+        
+        # Calculate pelvis
+        pelvis = l_hip + r_hip
+        pelvis = pelvis/2
+        
+        #calculate upper_neck
+        upper_neck = nose
+        
+        # Set array
+        keypoints2D_MPII[0] = r_ankle
+        keypoints2D_MPII[1] = r_knee
+        keypoints2D_MPII[2] = r_hip
+        keypoints2D_MPII[3] = l_hip
+        keypoints2D_MPII[4] = l_knee
+        keypoints2D_MPII[5] = l_ankle
+        #test1: spine->pelvis
+        keypoints2D_MPII[6] = spine
+        keypoints2D_MPII[7] = mid_thorax
+        keypoints2D_MPII[8] = upper_neck
+        keypoints2D_MPII[9] = head_top
+        keypoints2D_MPII[10] = r_wrist
+        keypoints2D_MPII[11] = r_elbow
+        keypoints2D_MPII[12] = r_shoulder
+        keypoints2D_MPII[13] = l_shoulder
+        keypoints2D_MPII[14] = l_elbow
+        keypoints2D_MPII[15] = l_wrist
+        
+        return keypoints2D_MPII
 
-    def defineModel(self):
-
+    def defineModel(self, net = "GT"):
+        # Set model arch
         self.model = LinearModel()
-        ckpt = torch.load(os.getcwd() + '/models/seffpose/ckpt_best.pth.tar', map_location=torch.device('cpu'))
-        # load statistics data
-        self.stat_3d = torch.load(os.getcwd() + '/models/seffpose/stat_3d.pth.tar')
+        
+        # Choose pre-trained model: 'SH' or 'GT'
+        self.net = net
+        
+        # set the computation device
+        self.device = torch.device('cuda' if self.use_cuda else 'cpu')
+        
+        if net == 'GT':
+            # Remove Neck/Nose from stat 2D
+            self.stat2D_mean = np.delete(self.full_gtposeHM36m2D_mean, 9, 0)
+            self.stat2D_std = np.delete(self.full_gtposeHM36m2D_std, 9, 0)
+            if not self.use_cuda:
+                ckpt = torch.load(os.getcwd() + '/models/seffpose/human36_gt_iter200.pth.tar',  map_location=torch.device('cpu'))
+            else:
+                ckpt = torch.load(os.getcwd() + '/models/seffpose/human36_gt_iter200.pth.tar')
 
-        self.model.eval()
+        elif net == 'SH':
+            # Adapt 2D stats for MPII entry
+            self.stat2D_mean = self.HUMAN36MtoMPIIstats(self.full_gtposeHM36m2D_mean)
+            self.stat2D_std = self.HUMAN36MtoMPIIstats(self.full_gtposeHM36m2D_std)
+            if not self.use_cuda:
+                ckpt = torch.load(os.getcwd() + '/models/seffpose/hm36m_sh_iter138.pth.tar', map_location=torch.device('cpu'))
+            else:
+                ckpt = torch.load(os.getcwd() + '/models/seffpose/hm36m_sh_iter138.pth.tar')
+                
+        # Load statistics data
+        self.stat_3d = torch.load(os.getcwd() + '/models/seffpose/stat_3d.pth.tar')
+        
+        # Load the modle on to the computation device and set to eval mode
+        self.model.to(self.device).eval()
         # print(stat_3d.keys())
         # print(ckpt.keys())
 
         self.model.load_state_dict(ckpt['state_dict'])
     
-    # TODO
-    def OpenPoseCOCOtoCOCO(self, keypoints2D_output, output_format='MPII'):
+    def normalizePose2D(self, keypoints2D_MPII, Width, Heigth):
         
-        # Stacked Hourglass produces 16 joints. These are the names. Ref:https://github.com/una-dinosauria/3d-pose-baseline/blob/666080d86a96666d499300719053cc8af7ef51c8/src/data_utils.py#L16
-        # Seff uses MPI keypoints w/ 16 joints in this order
-        # [0]'RFoot'
-        # [1]'RKnee'
-        # [2]'RHip'
-        # [3]'LHip'
-        # [4]'LKnee'
-        # [5]'LFoot'
-        # [6]'Hip'
-        # [7]'Spine'
-        # [8]'Thorax'
-        # [9]'Head'
-        # [10]'RWrist'
-        # [11]'RElbow'
-        # [12]'RShoulder'
-        # [13]'LShoulder'
-        # [14]'LElbow'
-        # [15]'LWrist'
+        # # divide by image width and length (width = length = 1000 pixels)
+        # gtpose2D_mean = gtpose2D_mean/1000
+        # gtpose2D_std = gtpose2D_std/1000
         
-        nose = keypoints2D_OpenPoseCOCO[0]
-        upper_thorax = keypoints2D_OpenPoseCOCO[1]
-        r_shoulder = keypoints2D_OpenPoseCOCO[2]
-        r_elbow = keypoints2D_OpenPoseCOCO[3]
-        r_wrist = keypoints2D_OpenPoseCOCO[4]
-        l_shoulder = keypoints2D_OpenPoseCOCO[5]
-        l_elbow = keypoints2D_OpenPoseCOCO[6]
-        l_wrist = keypoints2D_OpenPoseCOCO[7]
-        r_hip = keypoints2D_OpenPoseCOCO[8]
-        r_knee = keypoints2D_OpenPoseCOCO[9]
-        r_ankle = keypoints2D_OpenPoseCOCO[10]
-        l_hip = keypoints2D_OpenPoseCOCO[11]
-        l_knee = keypoints2D_OpenPoseCOCO[12]
-        l_ankle = keypoints2D_OpenPoseCOCO[13]
-        r_eye = keypoints2D_OpenPoseCOCO[14]
-        l_eye = keypoints2D_OpenPoseCOCO[15]
-        r_ear = keypoints2D_OpenPoseCOCO[16]
-        l_ear = keypoints2D_OpenPoseCOCO[17]
-        bkg = keypoints2D_OpenPoseCOCO[18]
-           
-    # TODO
-    def OpenPoseMPIItoMPII(self):
-        if(output_format=='MPII'):
-            pelvis = keypoints2D_output[8]/2 + keypoints2D_output[11]/2
-            self.keypoints2D_Baseline = np.array([keypoints2D_output[10], keypoints2D_output[9], keypoints2D_output[8],
-                                                  keypoints2D_output[11], keypoints2D_output[12], keypoints2D_output[13],
-                                                  pelvis, keypoints2D_output[15], keypoints2D_output[1],
-                                                  keypoints2D_output[0], keypoints2D_output[4], keypoints2D_output[3],
-                                                  keypoints2D_output[2], keypoints2D_output[5], keypoints2D_output[6],
-                                                  keypoints2D_output[15]])
-            
-            self.keypoints2D_Baseline = np.reshape(self.keypoints2D_Baseline, (1,32))
-            
-            self.keypoints2D_Baseline = self.keypoints2D_Baseline.astype(np.float32)
-            
-            self.keypoints2D_Baseline = torch.from_numpy(self.keypoints2D_Baseline)
-
+        # # Adapt mean and std to image scale
+        # adapted_mean = self.gtpose2DMPII_mean * square_image_length / 1000
+        # adapted_std = self.gtpose2DMPII_std * square_image_length / 1000 
+        
+        # # Normalize keypoints2D pre-normalized
+        # keypoints2D_norm = keypoints2D - adapted_mean
+        # keypoints2D_norm = keypoints2D_norm / adapted_std
+        
+        # Make a copy to avoid interference
+        keypoints2D = keypoints2D_MPII.copy()
+        
+        # Doesnt work
+        # # Simulate a 1000 pixels image
+        # keypoints2D[:,0] = 500 - Width/2 + keypoints2D[:, 0] 
+        # keypoints2D[:,1] = 500 - Heigth/2 + keypoints2D[:, 1]
+        
+        # Prepare
+        keypoints2D[:, 0] = keypoints2D[:, 0] / Width 
+        keypoints2D[:, 1] = keypoints2D[:, 1] / Heigth 
+        keypoints2D_norm = keypoints2D - self.stat2D_mean/1000
+        keypoints2D_norm = keypoints2D_norm / self.stat2D_std * 1000
+        
+        return keypoints2D_norm
+        
     def unNormalizeData(self, normalized_data, data_mean, data_std, dimensions_to_use):
         T = normalized_data.shape[0]  # Batch size
         D = data_mean.shape[0]  # 96
@@ -176,85 +270,7 @@ class SeffPose:
         orig_data = np.multiply(orig_data, stdMat) + meanMat
         return orig_data
     
-    def COCOtoMPII(self, keypoints2D_COCO):
-    
-        # COCO:
-        #https://www.immersivelimit.com/tutorials/create-coco-annotations-from-scratch
-        # "nose",        "left_eye",      "right_eye",      "left_ear",
-        # "right_ear",   "left_shoulder", "right_shoulder", "left_elbow",
-        # "right_elbow", "left_wrist",    "right_wrist",    "left_hip", 
-        # "right_hip",   "left_knee",     "right_knee",     "left_ankle",
-        # "right_ankle"
-
-        # Set auxiliar variables
-        nose = keypoints2D_COCO[0]
-        l_eye = keypoints2D_COCO[1]
-        r_eye = keypoints2D_COCO[2]
-        l_ear = keypoints2D_COCO[3]
-        r_ear = keypoints2D_COCO[4]
-        l_shoulder = keypoints2D_COCO[5]
-        r_shoulder = keypoints2D_COCO[6]
-        l_elbow = keypoints2D_COCO[7]
-        r_elbow = keypoints2D_COCO[8]
-        l_wrist = keypoints2D_COCO[9]
-        r_wrist = keypoints2D_COCO[10]
-        l_hip = keypoints2D_COCO[11]
-        r_hip = keypoints2D_COCO[12]
-        l_knee = keypoints2D_COCO[13]
-        r_knee = keypoints2D_COCO[14]
-        l_ankle = keypoints2D_COCO[15]
-        r_ankle = keypoints2D_COCO[16]
-        
-        # MPII:
-        #http://human-pose.mpi-inf.mpg.de/#download
-        #  r ankle,    r knee,     r hip,   l hip,
-        #  l knee,     l ankle,    pelvis,  thorax,
-        #  upper neck, head top,   r wrist, r elbow,
-        #  r shoulder, l shoulder, l elbow, l wrist
-        
-        # Calculate pelvis
-        pelvis = l_hip + r_hip
-        pelvis = pelvis/2
-        
-        # Calculate upper_neck
-        upper_neck = r_shoulder + l_shoulder
-        upper_neck = upper_neck/2
-        
-        # Calculate thorax
-        mid_thorax = pelvis + upper_neck
-        mid_thorax = mid_thorax/2
-        
-        # Calculate head_top
-        head_center = nose + r_ear + l_ear + r_eye + l_eye
-        head_center = head_center/5
-        vector_head = head_center - upper_neck
-        head_top = upper_neck + 1.5*vector_head
-        
-        # Init MPII kpts
-        keypoints2D_MPII = np.zeros((16,2))
-        
-        # Set array
-        keypoints2D_MPII[0] = r_ankle
-        keypoints2D_MPII[1] = r_knee
-        keypoints2D_MPII[2] = r_hip
-        keypoints2D_MPII[3] = l_hip
-        keypoints2D_MPII[4] = l_knee
-        keypoints2D_MPII[5] = l_ankle
-        keypoints2D_MPII[6] = pelvis
-        keypoints2D_MPII[7] = mid_thorax
-        keypoints2D_MPII[8] = upper_neck
-        keypoints2D_MPII[9] = head_top
-        keypoints2D_MPII[10] = r_wrist
-        keypoints2D_MPII[11] = r_elbow
-        keypoints2D_MPII[12] = r_shoulder
-        keypoints2D_MPII[13] = l_shoulder
-        keypoints2D_MPII[14] = l_elbow
-        keypoints2D_MPII[15] = l_wrist
-        
-        return keypoints2D_MPII
-        
     def estimatePose3Dfrom2DKeypoints(self, keypoints2D):
-        
         #keypoints2D = self.COCOtoMPII(keypoints2D)
         #self.keypoints2D = keypoints2D
         
@@ -282,41 +298,3 @@ class SeffPose:
     def getRawOutputs(self):
         return self.outputs
     
-# def convert_coco_to_openpose_cords(coco_keypoints_list):
-#     # coco keypoints: [x1,y1,v1,...,xk,yk,vk]       (k=17)
-#     #     ['Nose', Leye', 'Reye', 'Lear', 'Rear', 'Lsho', 'Rsho', 'Lelb',
-#     #      'Relb', 'Lwri', 'Rwri', 'Lhip', 'Rhip', 'Lkne', 'Rkne', 'Lank', 'Rank']
-#     # openpose keypoints: [y1,...,yk], [x1,...xk]   (k=18, with Neck)
-#     #     ['Nose', *'Neck'*, 'Rsho', 'Relb', 'Rwri', 'Lsho', 'Lelb', 'Lwri','Rhip',
-#     #      'Rkne', 'Rank', 'Lhip', 'Lkne', 'Lank', 'Leye', 'Reye', 'Lear', 'Rear']
-#     indices = [0, 6, 8, 10, 5, 7, 9, 12, 14, 16, 11, 13, 15, 1, 2, 3, 4]
-#     y_cords = []
-#     x_cords = []
-#     for i in indices:
-#         xi, yi, vi = coco_keypoints_list[i*3:(i+1)*3]
-#         if vi == 0: # not labeled
-#             y_cords.append(MISSING_VALUE)
-#             x_cords.append(MISSING_VALUE)
-#         elif vi == 1:   # labeled but not visible
-#             y_cords.append(yi)
-#             x_cords.append(xi)
-#         elif vi == 2:   # labeled and visible
-#             y_cords.append(yi)
-#             x_cords.append(xi)
-#         else:
-#             raise ValueError("vi value: {}".format(vi))
-#     # Get 'Neck' keypoint by interpolating between 'Lsho' and 'Rsho' keypoints
-#     l_shoulder_index = 5
-#     r_shoulder_index = 6
-#     l_shoulder_keypoint = coco_keypoints_list[l_shoulder_index*3:(l_shoulder_index+1)*3]
-#     r_shoulder_keypoint = coco_keypoints_list[r_shoulder_index*3:(r_shoulder_index+1)*3]
-#     if l_shoulder_keypoint[2] > 0 and r_shoulder_keypoint[2] > 0:
-#         neck_keypoint_y = int((l_shoulder_keypoint[1]+r_shoulder_keypoint[1])/2.)
-#         neck_keypoint_x = int((l_shoulder_keypoint[0]+r_shoulder_keypoint[0])/2.)
-#     else:
-#         neck_keypoint_y = neck_keypoint_x = MISSING_VALUE
-#     open_pose_neck_index = 1
-#     y_cords.insert(open_pose_neck_index, neck_keypoint_y)
-#     x_cords.insert(open_pose_neck_index, neck_keypoint_x)
-#     return np.concatenate([np.expand_dims(y_cords, -1),
-#                         np.expand_dims(x_cords, -1)], axis=1)

@@ -13,6 +13,8 @@ image = viz.getImagefromFile(fname)
 
 persons = pose2d.predictPose2D(image)
 
+print(persons)
+
 if len(persons>0):
     frame = pose2d.drawSkeleton(image)
     

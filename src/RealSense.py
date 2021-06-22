@@ -70,16 +70,15 @@ class RealSense:
 
         self.keypoints2D = keypoints2D
 
-        self.keypoints3D = np.ones((10, 17, 3)) * (-1)
+        self.keypoints3D = np.ones((17, 3)) * (-1)
 
-        for id in range(len(keypoints2D)):
-            for keypoint in range(len(keypoints2D[id])):
-                if(keypoints2D[id][keypoint][0] != -1):
-                    x = np.int(keypoints2D[id][keypoint][0])
-                    y = np.int(keypoints2D[id][keypoint][1])
-                    self.keypoints3D[id][keypoint] = rs.rs2_deproject_pixel_to_point(self.color_intrin, [x,y], self.depth_frame.get_distance(x, y))
-                else:
-                    self.keypoints3D[id][keypoint] = np.array([-1, -1, -1])
+        for keypoint in range(len(keypoints2D)):
+            if(keypoints2D[keypoint][0] != -1):
+                x = np.int(keypoints2D[keypoint][0])
+                y = np.int(keypoints2D[keypoint][1])
+                self.keypoints3D[keypoint] = rs.rs2_deproject_pixel_to_point(self.color_intrin, [x,y], self.depth_frame.get_distance(x, y))
+            else:
+                self.keypoints3D[keypoint] = np.array([-1, -1, -1])
 
         return self.keypoints3D
     

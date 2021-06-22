@@ -21,6 +21,11 @@ class KeypointRCNN:
         (12, 14), (14, 16), (5, 6)]
 
         self.use_cuda = torch.cuda.is_available()
+        if self.use_cuda:
+            print("Starting device with CUDA...")
+        else:
+            print("Starting device with CPU...")
+        
 
     def defineModel(self):
 
@@ -34,7 +39,7 @@ class KeypointRCNN:
         # initialize transform obj
         self.transform = transforms.Compose([transforms.ToTensor()])
     
-    def predictFrame(self, frame):
+    def predictPose2D(self, frame):
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -83,17 +88,6 @@ class KeypointRCNN:
             else:
                 continue
         return frame
-
-    #TODO
-    def normalizeKeypoints(self, image, keypoints2D):
-        
-        W = image.shape[1]
-        H = image.shape[0]
-        keypoints2D_norm = np.zeros((16,2))
-        keypoints2D_norm[:, 0] = keypoints2D[:, 0] / W
-        keypoints2D_norm[:, 1] = keypoints2D[:, 1] / H
-        
-        return keypoints2D_norm
     
     def _filterPersonsbyScore(self, persons, scores, min_thresh = 0.9):
         persons_filtered = []

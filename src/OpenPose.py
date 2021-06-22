@@ -30,7 +30,7 @@ class OpenPose:
     
 
         
-    def _getKeypoints(self, probMap, threshold=0.1):
+    def _getKeypoints(self, probMap, threshold=0.05):
 
         mapSmooth = cv2.GaussianBlur(probMap,(3,3),0,0)
 
@@ -117,7 +117,6 @@ class OpenPose:
                 # Append the detected connections to the global list
                 valid_pairs.append(valid_pair)
             else: # If no keypoints are detected
-                print("No Connection : k = {}".format(k))
                 invalid_pairs.append(k)
                 valid_pairs.append([])
         return valid_pairs, invalid_pairs
@@ -183,8 +182,8 @@ class OpenPose:
 
     def _getPersons(self, keypoints_list, personwiseKeypoints):
         
-        persons = np.zeros((len(personwiseKeypoints),17,2))
-        for i in range(17):
+        persons = np.zeros((len(personwiseKeypoints),18,2))
+        for i in range(18):
             for n in range(len(personwiseKeypoints)):
                 if (personwiseKeypoints[n][i] != -1):
                     persons[n][i]=keypoints_list[int(personwiseKeypoints[n][i]),[0,1]]
