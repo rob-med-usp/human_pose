@@ -1,31 +1,45 @@
-# Human Pose Estimation - HPE **WITH KEYPOINT-RCNN**
+# Real Time 3D Human Pose Estimation at Operating Rooms
 
 ## Description
 
 Two models implemented
 
-* **Keypoint RCNN** (you are here)
-* OpenPose
+* Pose 2D
+** Keypoint RCNN
+** OpenPose
+
+* Pose 3D
+** SeffPose
 
 ## Installation
-
-1.Install pytorch for your machine using the link:
+1. Clone this repository
+```bash
+git clone https://github.com/rob-med-usp/human_pose.git
+```
+2. Install pytorch for your machine using the link:
 
 <https://pytorch.org/get-started/locally/>
 
-2. Install OpenCV, Matplotlib, Numpy and Pillow
+3. Install OpenCV, Matplotlib, Numpy and Pillow
 ```bash
 pip install opencv-contrib-python matplotlib numpy Pillow
 ```
+4. Download pre-trained model
+
+<https://drive.google.com/file/d/1CSpx5hGD18y8Wp_RysoxUhIPvgYuzl9c/view?usp=sharing>
 
 ## Usage
 For image:
+```bash
+python rcnn_seffpose_image.py
+```
+For video:
 ```python
-python run_pose2D_image.py
+python rcnn_seffpose_video.py
 ```
 For webcam:
-```python
-python run_pose2D_webcam.py
+```bash
+python rcnn_seffpose_webcam.py
 ```
 
 ## Contributing
