@@ -7,11 +7,11 @@
 Two models implemented
 
 * Pose 2D
-** Keypoint RCNN
-** OpenPose
+* Keypoint RCNN
+* OpenPose
 
 * Pose 3D
-** SeffPose
+* SeffPose
 
 ## Installation
 1. Clone this repository
