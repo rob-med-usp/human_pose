@@ -20,13 +20,17 @@ git clone https://github.com/rob-med-usp/human_pose.git
 
 <https://pytorch.org/get-started/locally/>
 
-3. Install OpenCV, Matplotlib, Numpy and Pillow
+3. Install OpenCV, Matplotlib, Numpy and Pillow.
+
 ```bash
 pip install opencv-contrib-python matplotlib numpy Pillow
 ```
-4. Download pre-trained model
+
+4. Download pre-trained model from this link.
 
 <https://drive.google.com/file/d/1CSpx5hGD18y8Wp_RysoxUhIPvgYuzl9c/view?usp=sharing>
+
+5. Move the pre-trained model to the models/seffpose/ folder.
 
 ## Usage
 For image:
