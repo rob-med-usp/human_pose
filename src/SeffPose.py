@@ -1,5 +1,3 @@
-from pickle import HIGHEST_PROTOCOL
-from typing import KeysView
 from numpy.core.arrayprint import _make_options_dict
 from numpy.lib.utils import _split_line
 from numpy.testing._private.nosetester import NoseTester
