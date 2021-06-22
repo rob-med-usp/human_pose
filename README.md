@@ -32,7 +32,11 @@ pip install opencv-contrib-python matplotlib numpy Pillow
 
 <https://drive.google.com/file/d/1CSpx5hGD18y8Wp_RysoxUhIPvgYuzl9c/view?usp=sharing>
 
-5. Move the pre-trained model to the models/seffpose/ folder.
+5. Download necessary data from this link.
+
+<https://drive.google.com/file/d/1Q8YnEPMnIXYy7shK-JSCRs3AGnDa9efq/view?usp=sharing>
+
+6. Move the pre-trained model and the necessary data to the models/seffpose/ folder.
 
 ## Usage
 For image:
