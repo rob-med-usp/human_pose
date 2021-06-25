@@ -199,21 +199,21 @@ class SeffPose:
             self.stat2D_mean = np.delete(self.full_gtposeHM36m2D_mean, 9, 0)
             self.stat2D_std = np.delete(self.full_gtposeHM36m2D_std, 9, 0)
             if not self.use_cuda:
-                ckpt = torch.load(os.getcwd() + '/models/seffpose/human36_gt_iter200.pth.tar',  map_location=torch.device('cpu'))
+                ckpt = torch.load(os.path.join(os.getcwd(), 'models', 'seffpose', 'human36_gt_iter200.pth.tar'),  map_location=torch.device('cpu'))
             else:
-                ckpt = torch.load(os.getcwd() + '/models/seffpose/human36_gt_iter200.pth.tar')
+                ckpt = torch.load(os.path.join(os.getcwd(), 'models', 'seffpose', 'human36_gt_iter200.pth.tar'))
 
         elif net == 'SH':
             # Adapt 2D stats for MPII entry
             self.stat2D_mean = self.HUMAN36MtoMPIIstats(self.full_gtposeHM36m2D_mean)
             self.stat2D_std = self.HUMAN36MtoMPIIstats(self.full_gtposeHM36m2D_std)
             if not self.use_cuda:
-                ckpt = torch.load(os.getcwd() + '/models/seffpose/hm36m_sh_iter138.pth.tar', map_location=torch.device('cpu'))
+                ckpt = torch.load(os.path.join(os.getcwd(),'models','seffpose','hm36m_sh_iter138.pth.tar'), map_location=torch.device('cpu'))
             else:
-                ckpt = torch.load(os.getcwd() + '/models/seffpose/hm36m_sh_iter138.pth.tar')
+                ckpt = torch.load(os.path.join(os.getcwd(),'models','seffpose','hm36m_sh_iter138.pth.tar'))
                 
         # Load statistics data
-        self.stat_3d = torch.load(os.getcwd() + '/models/seffpose/stat_3d.pth.tar')
+        self.stat_3d = torch.load(os.path.join(os.getcwd(),'models','seffpose','stat_3d.pth.tar'))
         
         # Load the modle on to the computation device and set to eval mode
         self.model.to(self.device).eval()

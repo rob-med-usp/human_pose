@@ -35,10 +35,10 @@ class Visualizer:
         # Check if OS is win or not
         is_windows = sys.platform.startswith('win')
         
-        if is_windows:
-            mng.window.state('zoomed')
-        else:
-            mng.resize(*mng.window.maxsize())
+        # if is_windows:
+        #     mng.window.state('zoomed')
+        # else:
+        #     mng.resize(*mng.window.maxsize())
         self.ax2D = self.fig.add_subplot(1, 2, 1)
         
         # cv2.namedWindow(self.win_name_rgb, cv2.WINDOW_AUTOSIZE)
