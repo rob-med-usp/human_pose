@@ -28,11 +28,11 @@ git clone https://github.com/rob-med-usp/human_pose.git
 pip install opencv-contrib-python matplotlib numpy Pillow
 ```
 
-4. Download pre-trained model from this link.
+4. Download pre-trained model from this link. (Do not uncompress. Let the model with .tar end)
 
 <https://drive.google.com/file/d/1CSpx5hGD18y8Wp_RysoxUhIPvgYuzl9c/view?usp=sharing>
 
-5. Download necessary data from this link.
+5. Download necessary data from this link. (Do not uncompress. Let the model with .tar end)
 
 <https://drive.google.com/file/d/1Q8YnEPMnIXYy7shK-JSCRs3AGnDa9efq/view?usp=sharing>
 
