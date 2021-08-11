@@ -2,25 +2,29 @@ import numpy as np
 
 class SkeletonsBridge:
     
+    def __init__(self):
+        
+        self.pos_upperbody = [2,3,6,7,8,9,10,11,12,13,14,15]
+    
     def MPIItoHM36M(self, keypoints2D_MPII):
         
         # Set array
-        r_ankle    = keypoints2D_MPII[0] 
-        r_knee     = keypoints2D_MPII[1] 
-        r_hip      = keypoints2D_MPII[2] 
-        l_hip      = keypoints2D_MPII[3] 
-        l_knee     = keypoints2D_MPII[4] 
-        l_ankle    = keypoints2D_MPII[5] 
-        pelvis     = keypoints2D_MPII[6] 
+        r_ankle      = keypoints2D_MPII[0] 
+        r_knee       = keypoints2D_MPII[1] 
+        r_hip        = keypoints2D_MPII[2] 
+        l_hip        = keypoints2D_MPII[3] 
+        l_knee       = keypoints2D_MPII[4] 
+        l_ankle      = keypoints2D_MPII[5] 
+        pelvis       = keypoints2D_MPII[6] 
         upper_thorax = keypoints2D_MPII[7] 
-        upper_neck = keypoints2D_MPII[8] 
-        head_top   = keypoints2D_MPII[9] 
-        r_wrist    = keypoints2D_MPII[10] 
-        r_elbow    = keypoints2D_MPII[11] 
-        r_shoulder = keypoints2D_MPII[12] 
-        l_shoulder = keypoints2D_MPII[13] 
-        l_elbow    = keypoints2D_MPII[14] 
-        l_wrist    = keypoints2D_MPII[15]
+        upper_neck   = keypoints2D_MPII[8] 
+        head_top     = keypoints2D_MPII[9] 
+        r_wrist      = keypoints2D_MPII[10] 
+        r_elbow      = keypoints2D_MPII[11] 
+        r_shoulder   = keypoints2D_MPII[12] 
+        l_shoulder   = keypoints2D_MPII[13] 
+        l_elbow      = keypoints2D_MPII[14] 
+        l_wrist      = keypoints2D_MPII[15]
         
         spine = upper_thorax + pelvis
         spine = spine / 2
@@ -260,5 +264,9 @@ class SkeletonsBridge:
         keypoints2D_pre_norm[:, 1] = keypoints2D[:, 1] / H
         
         return keypoints2D_pre_norm
+    
+    def getUpperBody(self, keypoints):
+        
+        return keypoints[self.pos_upperbody]
     
     

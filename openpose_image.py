@@ -1,5 +1,6 @@
 from src.OpenPose import *
 from src.Visualizer import *
+import time
 
 fname = "img/000000.png"
 
@@ -11,7 +12,9 @@ viz.initWindows()
 
 image = viz.getImagefromFile(fname)
 
+t = time.time()
 persons = pose2d.predictPose2D(image)
+print(f"OpenPose time: {1/(time.time()-t)}")
 
 print(persons)
 

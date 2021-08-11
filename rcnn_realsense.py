@@ -17,22 +17,29 @@ while True:
 
     frame, depth = realsense.getRealSenseFrames()
 
-    persons = rcnn.predictFrame(frame)
-
+    t = time.time()
+    persons = rcnn.predictPose2D(frame)
+    print(f"MaskRCNN time: {time.time()-t}")
+    
     image = rcnn.drawSkeleton(frame, persons)
     
     if (len(persons)==0):
         viz.showImage(frame=frame)
-        viz.showImage(depth, Disparity=True)
+        # viz.showImage(depth, Disparity=True)
         continue
     
     viz.showImage(frame)
-    viz.showImage(depth, Disparity=True)
+    # viz.showImage(depth, Disparity=True)
     
     for person in persons:
+        t = time.time()
         keypoints3D = realsense.deprojectPose3D(person)
-        viz.plotPose3D(keypoints3D)
-    
+        # print(keypoints3D)
+        print(f"Deproj time: {time.time()-t}")
+        
+        t = time.time()
+        viz.plotPose3D(keypoints3D, block=False)
+        print(f'Plot time: {time.time()-t}')
     viz.ax3D.clear()
     
     

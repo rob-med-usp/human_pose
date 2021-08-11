@@ -292,7 +292,3 @@ class SeffPose:
 
     def getMPIIKeypoints(self):
         return self.keypoints2D
-    
-    def getRawOutputs(self):
-        return self.outputs
-    

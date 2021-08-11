@@ -21,6 +21,27 @@ class Visualizer:
         
         self.pairs_OpenPoseCOCO = [(1,0),(1,2),(1,5),(2,3),(3,4),(5,6),(6,7),(1,8),(8,9),(9,10),(1,11),(11,12),(12,13),(0,14),(0,15),(14,16),(15,17)]
         
+        self.pairs_upperbody_MPII = [(2, 6), (6, 3), (7, 6), (8, 7), (9, 8), (7, 12), (12, 11), (11, 10), (7, 13), (13, 14), (14, 15)]
+        
+        self.pos_upperbody = [2,3,6,7,8,9,10,11,12,13,14,15]
+        
+        self.pairs_full_3D_nose = [(0,1),(1,2),(2,3),(0,4),(4,5),(5,6),(0,7),(7,8),(8,9),
+                           (9,10),(8,11),(11,12),(12,13),(8,14),(14,15),(15,16)]
+        
+        self.pairs_upperbody_nose = [(0,1),(0,4),(0,7),(7,8),(8,9),
+                           (9,10),(8,11),(11,12),(12,13),(8,14),(14,15),(15,16)]
+        
+        self.pos_upperbody_nose = [0,1,4,7,8,9,10,11,12,13,14,15,16]
+        
+        # Without Nose on 3D pose
+        self.pairs_full_3D = [(0,1),(1,2),(2,3),(0,4),(4,5),(5,6),(0,7),(7,8),(8,9),
+                           (8,10),(10,11),(11,12),(8,13),(13,14),(14,15)]
+        
+        self.pairs_upperbody = [(0,1),(0,4),(0,7),(7,8),(8,9),
+                           (9,10),(8,11),(11,12),(12,13),(8,14),(14,15),(15,16)]
+        
+        self.pos_upperbody_no_nose = [0,1,4,7,8,9,10,11,12,13,14,15,16]
+        
         self.frame_tick = 0
 
     def initWindows(self, RGB = True, Disparity = False):
@@ -80,27 +101,47 @@ class Visualizer:
 
         return self.frame
 
-    def drawSkeleton(self, image, keypoints2D, mode = "MPII"):
+    def drawSkeleton(self, image, keypoints2D_full, mode = "MPII", upper_body = False):
         
         if mode == "MPII":
-            pairs = self.pairs_MPII
+            if upper_body:
+                pairs = self.pairs_upperbody_MPII
+            else:
+                pairs = self.pairs_MPII
         
-        for i in range(len(keypoints2D)):
-            x = int(keypoints2D[i][0])
-            y = int(keypoints2D[i][1])
-            cv2.circle(image, (x, y), 2, (255, 0, 0), thickness=-1, lineType=cv2.FILLED)
-            #cv2.putText(image, "{}".format(i), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 1, lineType=cv2.LINE_AA)
+        if upper_body:
+            for keypoint in range(len(keypoints2D_full)):
+                if(keypoint in self.pos_upperbody):
+                    x = int(keypoints2D_full[keypoint][0])
+                    y = int(keypoints2D_full[keypoint][1])
+                    cv2.circle(image, (x, y), 2, (255, 0, 0), thickness=-1, lineType=cv2.FILLED)
+                    #cv2.putText(image, "{}".format(i), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 1, lineType=cv2.LINE_AA)
+        
+        else:
+            for i in range(len(keypoints2D_full)):
+                x = int(keypoints2D_full[i][0])
+                y = int(keypoints2D_full[i][1])
+                cv2.circle(image, (x, y), 2, (255, 0, 0), thickness=-1, lineType=cv2.FILLED)
+                #cv2.putText(image, "{}".format(i), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 1, lineType=cv2.LINE_AA)
         
         for pair in pairs:
             part1 = pair[0]
             part2 = pair[1]
-            point1 = tuple(keypoints2D[part1].astype(int))
-            point2 = tuple(keypoints2D[part2].astype(int))
-            cv2.line(image, point1, point2, (255, 0, 0), 2)
+            point1 = tuple(keypoints2D_full[part1].astype(int))
+            point2 = tuple(keypoints2D_full[part2].astype(int))
+            color = (np.random.randint(255),np.random.randint(255),np.random.randint(255))
+            cv2.line(image, point1, point2, color, 4)
             # cv2.circle(image, point1, 2, (255, 0, 0), thickness=-1, lineType=cv2.FILLED)
             # cv2.circle(image, point2, 2, (255, 0, 0), thickness=-1, lineType=cv2.FILLED)
             
         return image
+    
+    def drawPersonAxis(self, image, keypoints, imgpts):
+        corner = tuple(keypoints[0].ravel())
+        img = cv.line(image, keypoints, tuple(imgpts[0].ravel()), (255,0,0), 5)
+        img = cv.line(image, keypoints, tuple(imgpts[1].ravel()), (0,255,0), 5)
+        img = cv.line(image, keypoints, tuple(imgpts[2].ravel()), (0,0,255), 5)
+        return img
     
     def showImage(self, frame = [], with_FPS = True, block = False, Disparity = False):
         
@@ -114,6 +155,12 @@ class Visualizer:
         if frame is not None:
             self.frame = frame
 
+        # if not block:
+        #     plt.pause(1)
+        #     quit()
+
+        # if block:
+        #     plt.pause(-1)
         # if not Disparity:
         #     self.inference_time = time.time() - self.frame_tick
         #     cv2.putText(self.frame, str(round(1/self.inference_time,2)), (30, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255,0,0))
@@ -124,11 +171,11 @@ class Visualizer:
         #     cv2.imshow(self.win_name_depth, frame)
             
         # if not block:
-        #     if cv2.waitKey(100) == 27:
+        #     if cv2.waitKey(1) == 27:
         #         quit()
 
         # if block:
-        #     cv2.waitKey()  
+        #     cv2.waitKey(10000)  
 
     def initPlot3D(self):
         
@@ -141,65 +188,99 @@ class Visualizer:
         self.ax3D.azim = 90
         self.ax3D.dist = 10
         self.ax3D.elev = 10
-        
 
-
-    def plotPose3D(self, keypoints3D, pairs_mode = 'COCO'):
-    
-        if(pairs_mode == 'MPI'):
-            if(len(keypoints3D) == 17):
-                self.keypoints3D = keypoints3D
-        
-        if(pairs_mode == 'COCO'):
-            if(len(keypoints3D) == 17):
-                self.keypoints3D = keypoints3D
+    def plotPose3D(self, keypoints3D, upper_body = False, block = False, nose = False):
         
         # Clear buff
         # self.ax.clear()
+        if nose:
+            pairs = self.pairs_upperbody_nose
+            pos = self.pos_upperbody_nose
+        elif upper_body:
+            pairs = self.pairs_upperbody
+            pos = self.pos_upperbody
+        else:
+            pairs = self.pairs_full_3D
         
-        self.ax3D.set_xlim([-1, 1])
-        self.ax3D.set_ylim([0, 4])
-        self.ax3D.set_zlim([-2, 2])
+        RADIUS = 750 # space around the subject
+        self.ax3D.set_xlim3d([-RADIUS, RADIUS])
+        self.ax3D.set_zlim3d([-RADIUS, RADIUS])
+        self.ax3D.set_ylim3d([-RADIUS, RADIUS])
+        
+        # RADIUS = 1500 # space around the subject
+        # self.ax3D.set_xlim3d([-RADIUS, RADIUS])
+        # self.ax3D.set_zlim3d([-RADIUS, RADIUS])
+        # self.ax3D.set_ylim3d([-2*RADIUS, 0])
+        
+        # self.ax3D.set_xlim3d([0, 2000])
+        # self.ax3D.set_ylim3d([7000, 9000])
+        # self.ax3D.set_zlim3d([0, -2000])
         
         # TODO: eliminate this for
         x, y, z = [], [], []
-        for keypoint in range(len(self.keypoints3D)):
-            if(self.keypoints3D[keypoint][0] != -1):
-                x.append(self.keypoints3D[keypoint][0])
-                y.append(self.keypoints3D[keypoint][1])
-                z.append(self.keypoints3D[keypoint][2])
-        
-        # Draw bones
-        if(pairs_mode == "MPI"):
-            pairs = self.pairs_OpenPose
-        if(pairs_mode == "COCO"):
-            pairs = self.pairs_COCO
+        if upper_body:
+            for keypoint in range(len(keypoints3D)):
+                if(keypoints3D[keypoint][0] != -1) and (keypoint in pos):
+                    x.append(keypoints3D[keypoint][0])
+                    y.append(keypoints3D[keypoint][1])
+                    z.append(keypoints3D[keypoint][2])
+        else:
+            for keypoint in range(len(keypoints3D)):
+                if(keypoints3D[keypoint][0] != -1):
+                    x.append(keypoints3D[keypoint][0])
+                    y.append(keypoints3D[keypoint][1])
+                    z.append(keypoints3D[keypoint][2])
             
         for edges in pairs:
                 
-            if(self.keypoints3D[edges[0]] == [-1, -1] or self.keypoints3D[edges[1]] == [-1, -1]):
+            if(keypoints3D[edges[0]] == [-1, -1] or keypoints3D[edges[1]] == [-1, -1]):
                 continue
             
-            x1 = self.keypoints3D[edges[0]][0]
-            y1 = self.keypoints3D[edges[0]][1]
-            z1 = self.keypoints3D[edges[0]][2]
+            x1 = keypoints3D[edges[0]][0]
+            y1 = keypoints3D[edges[0]][1]
+            z1 = keypoints3D[edges[0]][2]
 
-            x2 = self.keypoints3D[edges[1]][0]
-            y2 = self.keypoints3D[edges[1]][1]
-            z2 = self.keypoints3D[edges[1]][2]
+            x2 = keypoints3D[edges[1]][0]
+            y2 = keypoints3D[edges[1]][1]
+            z2 = keypoints3D[edges[1]][2]
             
-            self.ax3D.plot([x1, x2],[z1, z2] ,[-y1, -y2])
+            self.ax3D.plot([-x1, -x2],[-z1, -z2] ,[-y1, -y2])
         
         # Draw keypoints
         x = np.array(x)
         y = np.array(y)
         z = np.array(z)
-        self.ax3D.scatter(x, z, -y)
+        self.ax3D.scatter(-x, -z, -y)
+        
+        # # Get rid of the ticks and tick labels
+        # self.ax3D.set_xticks([])
+        # self.ax3D.set_yticks([])
+        # self.ax3D.set_zticks([])
+
+        # self.ax3D.get_xaxis().set_ticklabels([])
+        # self.ax3D.get_yaxis().set_ticklabels([])
+        # self.ax3D.set_zticklabels([])
+
+        # # Get rid of the panes (actually, make them white)
+        # white = (1.0, 1.0, 1.0, 0.0)
+        # self.ax3D.w_xaxis.set_pane_color(white)
+        # self.ax3D.w_yaxis.set_pane_color(white)
+        # # Keep z pane
+
+        # # Get rid of the lines in 3d
+        # self.ax3D.w_xaxis.line.set_color(white)
+        # self.ax3D.w_yaxis.line.set_color(white)
+        # self.ax3D.w_zaxis.line.set_color(white)
         
         # Display 3D plot
         #plt.draw()
-        plt.show(block=False)
-        plt.pause(0.001)
+        plt.show(block=block)
+        
+        if not block:
+            plt.pause(1)
+
+        if block:
+            plt.pause(-1)
         
     #TODO
     def plot3DHUMAN36(self, keypoints3D, outputs, block = False):
@@ -280,3 +361,10 @@ class Visualizer:
             plt.pause(-1)
         else:
             plt.pause(0.001)
+            
+    def plotFullScene(persons):
+        
+        fig = plt.figure()
+        ax3d = fig.add_subplot(111, projection = '3d')
+        
+        
