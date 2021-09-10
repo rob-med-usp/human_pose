@@ -22,7 +22,7 @@ viz.initPlot3D()
 # fname = "img/000069.png"
 # fname = 'img/000013demo.png'
 # fname = "single.jpeg"
-fname = 'img3/test4.png'
+fname = 'img3/test4git.png'
 # fname = 'img2/000296.jpg'
 
 image = viz.getImagefromFile(fname)
