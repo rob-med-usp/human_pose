@@ -1,6 +1,7 @@
 from src.OpenPose import *
 from src.Visualizer import *
 import time
+import matplotlib.pyplot as plt
 
 fname = "img/000000.png"
 
@@ -23,3 +24,4 @@ if len(persons>0):
     
 viz.showImage(frame=image, block=True)
 
+plt.pause(-1)

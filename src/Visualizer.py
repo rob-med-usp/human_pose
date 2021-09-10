@@ -60,7 +60,8 @@ class Visualizer:
         #     mng.window.state('zoomed')
         # else:
         #     mng.resize(*mng.window.maxsize())
-        self.ax2D = self.fig.add_subplot(1, 2, 1)
+        self.ax2D = self.fig.add_subplot(1, 3, 1)
+        self.axD = self.fig.add_subplot(1, 3, 2)
         
         # cv2.namedWindow(self.win_name_rgb, cv2.WINDOW_AUTOSIZE)
         # cv2.moveWindow(self.win_name_rgb, 0, 0)
@@ -69,6 +70,7 @@ class Visualizer:
         #     cv2.namedWindow(self.win_name_depth, cv2.WINDOW_AUTOSIZE)
         #     cv2.moveWindow(self.win_name_depth, 640, 0)
 
+#TODO: rename to loadImage()
     def getImagefromFile(self, fname):
         
         image = cv2.imread(fname)
@@ -87,6 +89,7 @@ class Visualizer:
             print("Error trying to open camera.")
             return False, []
 
+#TODO: rename to getFrame(cam)
     def getWebcamFrame(self):
 
         self.frame_tick = time.time()
@@ -138,9 +141,9 @@ class Visualizer:
     
     def drawPersonAxis(self, image, keypoints, imgpts):
         corner = tuple(keypoints[0].ravel())
-        img = cv.line(image, keypoints, tuple(imgpts[0].ravel()), (255,0,0), 5)
-        img = cv.line(image, keypoints, tuple(imgpts[1].ravel()), (0,255,0), 5)
-        img = cv.line(image, keypoints, tuple(imgpts[2].ravel()), (0,0,255), 5)
+        img = cv2.line(image, corner, tuple(imgpts[0].ravel()), (255,0,0), 5)
+        img = cv2.line(image, corner, tuple(imgpts[1].ravel()), (0,255,0), 5)
+        img = cv2.line(image, corner, tuple(imgpts[2].ravel()), (0,0,255), 5)
         return img
     
     def showImage(self, frame = [], with_FPS = True, block = False, Disparity = False):
@@ -155,6 +158,10 @@ class Visualizer:
         if frame is not None:
             self.frame = frame
 
+    def showDepthImage(self, depth = [], with_FPS = True, block = False, Disparity = False):
+        
+        self.axD.imshow(depth)
+        
         # if not block:
         #     plt.pause(1)
         #     quit()
@@ -184,39 +191,21 @@ class Visualizer:
         if self.fig in locals():
             self.fig = plt.figure()
         
-        self.ax3D = self.fig.add_subplot(1, 2, 2, projection = '3d')
-        self.ax3D.azim = 90
+        self.ax3D = self.fig.add_subplot(1, 3, 3, projection = '3d')
+        self.ax3D.azim = 0 
         self.ax3D.dist = 10
         self.ax3D.elev = 10
 
-    def plotPose3D(self, keypoints3D, upper_body = False, block = False, nose = False):
+    def plotRealSenseDeproj(self, keypoints3D, upper_body = False, block = False, nose = False):
         
-        # Clear buff
-        # self.ax.clear()
-        if nose:
-            pairs = self.pairs_upperbody_nose
-            pos = self.pos_upperbody_nose
-        elif upper_body:
-            pairs = self.pairs_upperbody
-            pos = self.pos_upperbody
-        else:
-            pairs = self.pairs_full_3D
+        pairs = self.pairs_upperbody_MPII
+        pos = self.pos_upperbody
         
-        RADIUS = 750 # space around the subject
+        RADIUS = 1 # space around the subject
         self.ax3D.set_xlim3d([-RADIUS, RADIUS])
         self.ax3D.set_zlim3d([-RADIUS, RADIUS])
         self.ax3D.set_ylim3d([-RADIUS, RADIUS])
         
-        # RADIUS = 1500 # space around the subject
-        # self.ax3D.set_xlim3d([-RADIUS, RADIUS])
-        # self.ax3D.set_zlim3d([-RADIUS, RADIUS])
-        # self.ax3D.set_ylim3d([-2*RADIUS, 0])
-        
-        # self.ax3D.set_xlim3d([0, 2000])
-        # self.ax3D.set_ylim3d([7000, 9000])
-        # self.ax3D.set_zlim3d([0, -2000])
-        
-        # TODO: eliminate this for
         x, y, z = [], [], []
         if upper_body:
             for keypoint in range(len(keypoints3D)):
@@ -252,28 +241,110 @@ class Visualizer:
         z = np.array(z)
         self.ax3D.scatter(-x, -z, -y)
         
-        # # Get rid of the ticks and tick labels
-        # self.ax3D.set_xticks([])
-        # self.ax3D.set_yticks([])
-        # self.ax3D.set_zticks([])
+        plt.show(block=block)
+        
+        if not block:
+            plt.pause(1)
 
-        # self.ax3D.get_xaxis().set_ticklabels([])
-        # self.ax3D.get_yaxis().set_ticklabels([])
-        # self.ax3D.set_zticklabels([])
+        if block:
+            plt.pause(-1)
+        
+        
+    def drawBones3D(self, ax3D, keypoints3D, pairs, upper_body):
+        
+        x, y, z = [], [], []
+        if upper_body:
+            for keypoint in range(len(keypoints3D)):
+                if(keypoints3D[keypoint][0] != -1) and (keypoint in self.pos_upperbody):
+                    x.append(keypoints3D[keypoint][0])
+                    y.append(keypoints3D[keypoint][1])
+                    z.append(keypoints3D[keypoint][2])
+        else:
+            for keypoint in range(len(keypoints3D)):
+                if(keypoints3D[keypoint][0] != -1):
+                    x.append(keypoints3D[keypoint][0])
+                    y.append(keypoints3D[keypoint][1])
+                    z.append(keypoints3D[keypoint][2])
+            
+        for edges in pairs:
+                
+            if(keypoints3D[edges[0]] == [-1, -1] or keypoints3D[edges[1]] == [-1, -1]):
+                continue
+            
+            x1 = keypoints3D[edges[0]][0]
+            y1 = keypoints3D[edges[0]][1]
+            z1 = keypoints3D[edges[0]][2]
 
-        # # Get rid of the panes (actually, make them white)
-        # white = (1.0, 1.0, 1.0, 0.0)
-        # self.ax3D.w_xaxis.set_pane_color(white)
-        # self.ax3D.w_yaxis.set_pane_color(white)
-        # # Keep z pane
+            x2 = keypoints3D[edges[1]][0]
+            y2 = keypoints3D[edges[1]][1]
+            z2 = keypoints3D[edges[1]][2]
+            
+            # ax3D.plot([-x1, -x2],[-z1, -z2] ,[-y1, -y2])
+            ax3D.plot([x1, x2],[y1, y2], [z1, z2])
 
-        # # Get rid of the lines in 3d
-        # self.ax3D.w_xaxis.line.set_color(white)
-        # self.ax3D.w_yaxis.line.set_color(white)
-        # self.ax3D.w_zaxis.line.set_color(white)
+        # Draw keypoints
+        x = np.array(x)
+        y = np.array(y)
+        z = np.array(z)
+        # ax3D.scatter(-x, -z, -y)
+        ax3D.scatter(x, y, z)
+        
+        return ax3D
+    
+    def onlyGroundAx(self, ax3D):
+        
+        # Get rid of the ticks and tick labels
+        ax3D.set_xticks([])
+        ax3D.set_yticks([])
+        ax3D.set_zticks([])
+
+        ax3D.get_xaxis().set_ticklabels([])
+        ax3D.get_yaxis().set_ticklabels([])
+        ax3D.set_zticklabels([])
+
+        # Get rid of the panes (actually, make them white)
+        white = (1.0, 1.0, 1.0, 0.0)
+        ax3D.w_xaxis.set_pane_color(white)
+        ax3D.w_yaxis.set_pane_color(white)
+        # Keep z pane
+
+        # Get rid of the lines in 3d
+        ax3D.w_xaxis.line.set_color(white)
+        ax3D.w_yaxis.line.set_color(white)
+        ax3D.w_zaxis.line.set_color(white)
+        
+        return ax3D
+        
+    def plotPose3D(self, keypoints3D, upper_body = False, block = False, nose = False):
+        
+        # Clear buff
+        # self.ax.clear()
+        if nose:
+            pairs = self.pairs_upperbody_nose
+            pos = self.pos_upperbody_nose
+        elif upper_body:
+            pairs = self.pairs_full_3D
+            pos = self.pos_upperbody
+        else:
+            pairs = self.pairs_full_3D
+        
+        RADIUS = 2000 # space around the subject
+        self.ax3D.set_xlim3d([-RADIUS, RADIUS])
+        self.ax3D.set_zlim3d([-RADIUS, RADIUS])
+        self.ax3D.set_ylim3d([-RADIUS ,RADIUS])
+        
+        self.ax3D.set_xlabel('x')
+        self.ax3D.set_ylabel('y')
+        self.ax3D.set_zlabel('z')
+        
+        # Plot keypoints 3D
+        # keypoints3D = keypoints3D/1000
+        self.ax3D = self.drawBones3D(self.ax3D, keypoints3D, pairs, upper_body)
+        
+        # Make the enviroment with only one plan
+        # self.ax3D = self.onlyGroundAx(self.ax3D)
         
         # Display 3D plot
-        #plt.draw()
         plt.show(block=block)
         
         if not block:

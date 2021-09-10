@@ -6,6 +6,7 @@ class SkeletonsBridge:
         
         self.pos_upperbody = [2,3,6,7,8,9,10,11,12,13,14,15]
     
+    #MPII to HM38M 2D-> pose 2d input
     def MPIItoHM36M(self, keypoints2D_MPII):
         
         # Set array

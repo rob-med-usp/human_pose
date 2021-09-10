@@ -35,15 +35,29 @@ class Deprojector:
         print(f'Mtx shape: {intrinsics.shape}')
         print(f'Distort shape: {distortion.shape}')
         
-        axis = np.float32([[3,0,0], [0,3,0], [0,0,-3]]).reshape(-1,3)
+        axis = np.float32([[300,0,0], [0,300,0], [0,0,-300]]).reshape(-1,3)
         
         # Find the rotation and translation vectors.
-        ret, rvecs, tvecs = cv2.solvePnP(keypoints3D_local, keypoints2D, intrinsics, distortion)
+        dist_zero = np.array([[0.0,0.0,0.0,0.0,0.0]])
+        # ret, rvecs, tvecs = cv2.solvePnP(keypoints3D_local, keypoints2D, intrinsics, distortion)
         
+        ret, rvecs, tvecs, inliers = cv2.solvePnPRansac(keypoints3D_local, keypoints2D, intrinsics, dist_zero,iterationsCount = 10000)
+        
+        # print(kpts_global)
+        print(rvecs)
+        
+        rotation_matrix, jac = cv2.Rodrigues(rvecs)
+        print(rotation_matrix)
+        
+        # Rotate and Translate points
+        # kpts_global = np.dot(np.linalg.inv(rotation_matrix),keypoints3D_local.T) - tvecs
+        
+        kpts_global = np.dot(rotation_matrix,keypoints3D_local.T) + tvecs
+        # kpts_global = keypoints3D_local + tvecs.T
+        
+        # print(f"Inliers: {inliers}")
         # project 3D points to image plane
-        imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, intrinsics, distortion)
+        imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, intrinsics, dist_zero)
+        posepoints, jac = cv2.projectPoints(kpts_global, rvecs, tvecs, intrinsics, dist_zero)
         
-        # Translate points
-        keypoints3D_global = keypoints3D_local + tvecs.T
-        
-        return keypoints3D_global, rvecs, tvecs, imgpts
+        return kpts_global, imgpts, posepoints

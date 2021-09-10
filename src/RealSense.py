@@ -70,7 +70,7 @@ class RealSense:
 
         self.keypoints2D = keypoints2D
 
-        self.keypoints3D = np.ones((17, 3)) * (-1)
+        self.keypoints3D = np.ones((len(keypoints2D), 3)) * (-1)
 
         for keypoint in range(len(keypoints2D)):
             if(keypoints2D[keypoint][0] != -1):
