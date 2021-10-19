@@ -141,9 +141,10 @@ class Visualizer:
     
     def drawPersonAxis(self, image, keypoints, imgpts):
         corner = tuple(keypoints[0].ravel())
-        img = cv2.line(image, corner, tuple(imgpts[0].ravel()), (255,0,0), 5)
-        img = cv2.line(image, corner, tuple(imgpts[1].ravel()), (0,255,0), 5)
-        img = cv2.line(image, corner, tuple(imgpts[2].ravel()), (0,0,255), 5)
+        print(corner)
+        img = cv2.line(image, corner, tuple(np.array(imgpts[0].ravel(), np.uint)), (255,0,0), 5)
+        img = cv2.line(image, corner, tuple(np.array(imgpts[1].ravel(), np.uint)), (0,255,0), 5)
+        img = cv2.line(image, corner, tuple(np.array(imgpts[2].ravel(), np.uint)), (0,0,255), 5)
         return img
     
     def showImage(self, frame = [], with_FPS = True, block = False, Disparity = False):

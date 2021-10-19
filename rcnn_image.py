@@ -11,6 +11,6 @@ fname = "000000.png"
 
 #image = viz.getImagefromFile(fname)
 image = cv2.imread(fname)
-keypoints, scores = pose2d.predictFrame(image)
+keypoints, scores = pose2d.predictPose2D(image)
 pose2d.drawSkeleton(image, keypoints, scores)
 viz.showImage(frame=image, block=True)

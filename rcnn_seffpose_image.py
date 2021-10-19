@@ -1,3 +1,4 @@
+from numpy import dtype
 from src.OpenPose import * 
 from src.KeypointRCNN import *
 from src.SeffPose import *
@@ -22,7 +23,7 @@ viz.initPlot3D()
 # fname = "img/000069.png"
 # fname = 'img/000013demo.png'
 # fname = "single.jpeg"
-fname = 'img3/test4git.png'
+fname = 'img3/test3.png'
 # fname = 'img2/000296.jpg'
 
 image = viz.getImagefromFile(fname)
@@ -50,10 +51,11 @@ if (len(persons) > 0):
     print("SeffPose time: {}".format(time.time()-t))
     
     t = time.time()
-    kpts_global, imgpts, posepoints = deproj.deprojectPose(keypoints2D_HM36M, keypoints3D)
+    kpts_global, posepoints, homogeneous = deproj.deprojectPose(keypoints2D_HM36M, keypoints3D)
     print(f"Deprojection time: {time.time()-t}")
     
-    image = viz.drawPersonAxis(image, np.array(keypoints2D_HM36M, dtype = np.uint16), imgpts)
+    imgpts = deproj.makePersonAxis(homogeneous)
+    image = viz.drawPersonAxis(image, np.array(keypoints2D_HM36M, np.uint), imgpts)
     image = viz.drawSkeleton(image.copy(), keypoints2D_MPII, upper_body= True)
     
     for point in posepoints:
@@ -68,8 +70,8 @@ cv2.imshow("Pose", image)
 
 cv2.waitKey()
 
-viz.showImage(frame = image)
-viz.plotPose3D(kpts_global.T, block = True, upper_body = True, nose = False)
-# viz.plotPose3D(keypoints3D, block = True, upper_body = True, nose = True)
+# viz.showImage(frame = image)
+# viz.plotPose3D(kpts_global.T, block = True, upper_body = True, nose = False)
+viz.plotPose3D(keypoints3D, block = True, upper_body = True, nose = True)
 
 print("Visualization time: {}".format(time.time()-t))
