@@ -1,6 +1,6 @@
 # Real Time 3D Human Pose Estimation in Operating Rooms
 
-![3D Pose Estimation](rcnn_seffpose_test.gif)
+
 
 ## Description
 
