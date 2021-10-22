@@ -11,10 +11,14 @@ import time
 from PIL import Image
 from torchvision.transforms import transforms as transforms
 
+from SkeletonsBridge import *
+
 class KeypointRCNN:
 
     def __init__(self):
         
+        self.bridge = SkeletonsBridge()
+
         self.edges = [
         (0, 1), (0, 2), (2, 4), (1, 3), (6, 8), (8, 10),
         (5, 7), (7, 9), (5, 11), (11, 13), (13, 15), (6, 12),
@@ -39,7 +43,7 @@ class KeypointRCNN:
         # initialize transform obj
         self.transform = transforms.Compose([transforms.ToTensor()])
     
-    def predictPose2D(self, frame):
+    def estimate2DPose(self, frame):
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -57,8 +61,10 @@ class KeypointRCNN:
         persons, scores = self._getKeypointsAndPersonScores()
         
         persons = self._filterPersonsbyScore(persons, scores, min_thresh = 0.95)
-        
-        return persons
+
+        persons = self.bridge.transformFromTo(persons, "COCO", 'HM36M')
+
+        return np.array(persons)
 
     # TODO: Recieve keypoints instead outputs
     def drawSkeleton(self, frame, persons):

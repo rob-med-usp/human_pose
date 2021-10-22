@@ -247,6 +247,24 @@ class SkeletonsBridge:
         keypoints2D_MPII[15] = l_wrist
         
         return keypoints2D_MPII
+    
+    def transformFromTo(self, persons2D_from, mode_from, mode_to):
+        persons2D_to = []
+        if mode_from == 'COCO' and mode_to == 'HM36M':
+            for person2D in persons2D_from:
+                person2D = self.COCOtoMPII(person2D)
+                person2D = self.MPIItoHM36M(person2D)
+                persons2D_to.append(person2D)
+        elif mode_from == 'OpenPoseCOCO' and mode_to == 'HM36M':
+            for person2D in persons2D_from:
+                person2D = self.OpenPoseCOCOtoCOCO(person2D)
+                person2D = self.COCOtoMPII(person2D)
+                person2D = self.MPIItoHM36M(person2D)
+                persons2D_to.append(person2D)
+        else:
+            print("Mode doesnt match")
+        return np.array(persons2D_to)
+
 
     def preNormalizeKeypoints(self, image, keypoints2D):
         

@@ -2,12 +2,16 @@ import cv2
 import time
 import numpy as np
 
+from SkeletonsBridge import *
+
 class OpenPose:
     
     def __init__(self, device = 'cpu'):
         
         self.device = device
         
+        self.bridge = SkeletonsBridge()
+
         # COCO Output Format
         self.keypointsMapping = ['Nose', 'Neck', 'R-Sho', 'R-Elb', 'R-Wr', 'L-Sho', 'L-Elb', 'L-Wr', 'R-Hip', 'R-Knee', 'R-Ank', 'L-Hip', 'L-Knee', 'L-Ank', 'R-Eye', 'L-Eye', 'R-Ear', 'L-Ear']
 
@@ -27,8 +31,6 @@ class OpenPose:
         self.colors = [ [0,100,255], [0,100,255], [0,255,255], [0,100,255], [0,255,255], [0,100,255],
                 [0,255,0], [255,200,100], [255,0,255], [0,255,0], [255,200,100], [255,0,255],
                 [0,0,255], [255,0,0], [200,200,0], [255,0,0], [200,200,0], [0,0,0]]
-    
-
         
     def _getKeypoints(self, probMap, threshold=0.05):
 
@@ -121,7 +123,6 @@ class OpenPose:
                 valid_pairs.append([])
         return valid_pairs, invalid_pairs
     
-
     # This function creates a list of keypoints belonging to each person
     # For each detected valid pair, it assigns the joint(s) to a person
     def _getPersonwiseKeypoints(self, valid_pairs, invalid_pairs, keypoints_list):
@@ -191,10 +192,11 @@ class OpenPose:
                     persons[n][i]=-1
         return persons
 
-    def defineModel(self, mode = "COCO", inWidth = 363, inHeight = 363):
+    def defineModel(self):
         
-        self.inWidth = inWidth
-        self.inHeight = inHeight
+        mode = "COCO"
+        self.inWidth = 363
+        self.inHeight = 363
         
         if mode is "COCO":
             protoFile = "models/openpose/coco/pose_deploy_linevec.prototxt"
@@ -218,7 +220,7 @@ class OpenPose:
             self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
             print("Using GPU device")
 
-    def predictPose2D(self, frame):
+    def estimate2DPose(self, frame):
 
         self.frameWidth = frame.shape[1]
         self.frameHeight = frame.shape[0]
@@ -254,4 +256,6 @@ class OpenPose:
 
         persons = self._getPersons(self.keypoints_list, self.personwiseKeypoints)
         
-        return persons
+        persons = self.bridge.transformFromTo(persons, "OpenPoseCOCO", 'HM36M')
+
+        return np.array(persons)

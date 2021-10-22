@@ -222,7 +222,7 @@ class SeffPose:
 
         self.model.load_state_dict(ckpt['state_dict'])
     
-    def normalizePose2D(self, keypoints2D_MPII, Width, Heigth):
+    def normalizePose2D(self, keypoints2D_HM36M, Width, Heigth):
         
         # # divide by image width and length (width = length = 1000 pixels)
         # gtpose2D_mean = gtpose2D_mean/1000
@@ -237,7 +237,7 @@ class SeffPose:
         # keypoints2D_norm = keypoints2D_norm / adapted_std
         
         # Make a copy to avoid interference
-        keypoints2D = keypoints2D_MPII.copy()
+        keypoints2D = keypoints2D_HM36M.copy()
         
         # Doesnt work
         # # Simulate a 1000 pixels image
@@ -247,6 +247,7 @@ class SeffPose:
         # Prepare
         keypoints2D[:, 0] = keypoints2D[:, 0] / Width 
         keypoints2D[:, 1] = keypoints2D[:, 1] / Heigth 
+        # Normalize
         keypoints2D_norm = keypoints2D - self.stat2D_mean/1000
         keypoints2D_norm = keypoints2D_norm / self.stat2D_std * 1000
         
