@@ -25,8 +25,11 @@ class HydraPose:
         self.mode3D = pose3D
         self.mode_ros = ros
 
+        #OS type
+        # Check if OS is win or not
+        self.is_windows = sys.platform.startswith('win')
+        
         # Init architeture
-
         # Init pose 2D
         if self.mode2D == OPENPOSE:
             self.pose2d = OpenPose()
@@ -39,7 +42,7 @@ class HydraPose:
         self.bridge = SkeletonsBridge()
 
         # Init deprojector
-        if self.mode3D == FULL | self.mode3D == SEFFPOSE:
+        if self.mode3D == FULL or self.mode3D == SEFFPOSE:
             self.deproj = Deprojector()
 
         # Init pose 3D
@@ -50,6 +53,7 @@ class HydraPose:
             
         elif self.mode3D == SEFFPOSE:
             self.seff = SeffPose()
+            self.seff.defineModel()
 
         elif self.mode3D == REALSENSE:
             self.rlsns = RealSense()
@@ -60,32 +64,6 @@ class HydraPose:
         # Init ROS
         if self.mode_ros == True:
             self.ros = RosHandler()
-    
-    def initWebcam(self, cam = 0):
-
-        if self.mode3D != SEFFPOSE:
-            print("Mode 3D doesn't work with webcam.")
-
-        cap = cv2.VideoCapture(cam)
-
-        return cap
-    
-    def initVideoStream(self, filepath):
-
-        if self.mode3D != SEFFPOSE:
-            print("Mode 3D doesn't work with video stream.")
-            exit()
-
-        return cv2.VideoCapture(filepath)
-
-    def getWebcamFrame(self, cap):
-
-        ret, self.frame = cap.read()
-
-        if ret is False:
-            print("Failed to get frame.")
-
-        return self.frame
 
     def initRealSense(self):
         self.rlsns.initRealSense()
@@ -105,13 +83,17 @@ class HydraPose:
 
         return self.color_img, self.depth_img
     
-    def estimate3DPose(self):
+    def estimate3DPose(self, color_img):
 
-        if(self.color_img is None | self.color_img is []):
+        if(color_img is None):
             print("Image empty.")
             return
 
-        self.persons2D = self.pose2d.estimate2DPose(self.color_img)
+
+        h = color_img.shape[0]
+        w = color_img.shape[1]
+
+        self.persons2D = self.pose2d.estimate2DPose(color_img)
 
         # Return if persons is empty
         if len(self.persons2D) == 0:
@@ -119,11 +101,11 @@ class HydraPose:
         
         if self.mode3D == FULL:
             persons3DRealsense = self.estimate3DPoseRealsense(self.persons2D)
-            persons3DSeffPose = self.estimate3DPoseSeffpose(self.persons2D)
+            persons3DSeffPose = self.estimate3DPoseSeffpose(self.persons2D, w, h)
             self.persons3DHybrid = self.fuseResultsSeffPoseRealsense(persons3DRealsense, persons3DSeffPose)
 
         elif self.mode3D == SEFFPOSE:
-            persons3DSeffPose = self.estimate3DPoseSeffpose(self.persons2D)
+            persons3DSeffPose = self.estimate3DPoseSeffpose(self.persons2D, w, h)
             self.persons3DHybrid = persons3DSeffPose 
 
         elif self.mode3D == REALSENSE:
@@ -141,14 +123,14 @@ class HydraPose:
         
         return np.array(persons3D)
 
-    def estimate3DPoseSeffpose(self, persons2D):
+    def estimate3DPoseSeffpose(self, persons2D, w, h):
         
         persons3D = []
         for person2D in persons2D:
-            person2D = self.seff.normalizePose2D(person2D)
-            person3D = self.seff.estimatePose3Dfrom2DKeypoints(person2D)
-            person3D,_,_ = self.deproj.deprojectPose(person2D, person3D)
-            persons3D.append(person3D)
+            person2D_norm = self.seff.normalizePose2D(person2D, w, h)
+            person3D = self.seff.estimatePose3Dfrom2DKeypoints(person2D_norm)
+            person3D_deproj,_,_ = self.deproj.deprojectPose(person2D, person3D)
+            persons3D.append(person3D_deproj)
         
         return np.array(persons3D)
     
@@ -164,7 +146,11 @@ class HydraPose:
         
         return np.array(personsHybrid3D)
 
-    def plotPersons(self):
+    def initWindow(self):
+        self.viz.initWindows()
 
-        image = self.viz.drawSkeleton(self.color_img, self.persons2D, upper_body= True)
-        self.viz.plotPose3D(self.persons3DHybrid, block = True, upper_body = True, nose = True)
+    def plotPersons(self, color_img, block = True):
+
+        self.viz.drawSkeleton(color_img, self.persons2D, upper_body= True)
+        self.viz.show(color_img, self.persons3DHybrid, block = block)
+        # self.viz.show(image,self.depth_img,self.persons3DHybrid, block = False)

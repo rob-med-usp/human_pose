@@ -32,14 +32,23 @@ class Deprojector:
         # Remove nose from keypoints3D
         keypoints3D_local = np.delete(keypoints3D_local, 9, 0)
         
+        # Guess the translation
+        tvec_estimative = np.array([[0, 0, 2000]], dtype = np.float64)
+        rvec_estimative = np.array([[0,0,0]], dtype = np.float64)
+
         # Find the rotation and translation vectors.
-        ret, rvecs, tvecs, inliers = cv2.solvePnPRansac(keypoints3D_local, keypoints2D, self.intrinsics, self.distortion)
+        ret, rvecs, tvecs = cv2.solvePnP(keypoints3D_local, keypoints2D, self.intrinsics, self.distortion,
+                                                        rvec=rvec_estimative ,tvec=tvec_estimative, useExtrinsicGuess=True,)
         
         rotation_matrix, jac = cv2.Rodrigues(rvecs)
         
         # Rotate and Translate points
-        kpts_global = np.dot(rotation_matrix,keypoints3D_local.T) + tvecs
+        kpts_global = np.dot(rotation_matrix,keypoints3D_local.T) + tvecs.T
         
+        # Result will be (3,16) because (3,3)*(16,3).T + (3,1) = (3,16)
+        # So, we need to transpose kpts
+        kpts_global = kpts_global.T
+
         # Project global kpts to image plane 
         tvecs_zeros = np.array([0.0, 0.0, 0.0]).T
         rvecs_zeros = np.array([0.0, 0.0, 0.0]).T

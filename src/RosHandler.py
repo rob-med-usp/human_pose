@@ -1,5 +1,5 @@
 import rospy
-from human_pose.msg import Human_Pose
+# from human_pose.msg import Human_Pose
 
 class RosHandler:
 

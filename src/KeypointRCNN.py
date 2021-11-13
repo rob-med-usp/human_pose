@@ -11,7 +11,7 @@ import time
 from PIL import Image
 from torchvision.transforms import transforms as transforms
 
-from SkeletonsBridge import *
+from src.SkeletonsBridge import *
 
 class KeypointRCNN:
 
@@ -62,38 +62,9 @@ class KeypointRCNN:
         
         persons = self._filterPersonsbyScore(persons, scores, min_thresh = 0.95)
 
-        persons = self.bridge.transformFromTo(persons, "COCO", 'HM36M')
+        persons = self.bridge.transformPersonsFromTo(persons, "COCO", 'HM36M')
 
         return np.array(persons)
-
-    # TODO: Recieve keypoints instead outputs
-    def drawSkeleton(self, frame, persons):
-
-        # the `outputs` is list which in-turn contains the dictionaries
-        for i in range(len(persons)):
-            
-            keypoints = persons[i]
-            # proceed to draw the lines if the confidence score is above 0.9
-            keypoints = keypoints[:, :].reshape(-1, 2)
-            for p in range(keypoints.shape[0]):
-                # draw the keypoints
-                cv2.circle(frame, (int(keypoints[p, 0]), int(keypoints[p, 1])), 3, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
-                # uncomment the following lines if you want to put keypoint number
-                # cv2.putText(image, f"{p}", (int(keypoints[p, 0]+10), int(keypoints[p, 1]-5)),
-                #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-            for ie, e in enumerate(self.edges):
-                # get different colors for the edges
-                rgb = matplotlib.colors.hsv_to_rgb([
-                    ie/float(len(self.edges)), 1.0, 1.0
-                ])
-                rgb = rgb*255
-                # join the keypoint pairs to draw the skeletal structure
-                cv2.line(frame, (keypoints[e, 0][0], keypoints[e, 1][0]),
-                        (keypoints[e, 0][1], keypoints[e, 1][1]),
-                        tuple(rgb), 2, lineType=cv2.LINE_AA)
-            else:
-                continue
-        return frame
     
     def _filterPersonsbyScore(self, persons, scores, min_thresh = 0.9):
         persons_filtered = []
@@ -115,3 +86,32 @@ class KeypointRCNN:
         self.persons = self.persons[:,:,:2]
         
         return self.persons, self.person_scores
+
+    # # TODO: Recieve keypoints instead outputs
+    # def drawSkeleton(self, frame, persons):
+
+    #     # the `outputs` is list which in-turn contains the dictionaries
+    #     for i in range(len(persons)):
+            
+    #         keypoints = persons[i]
+    #         # proceed to draw the lines if the confidence score is above 0.9
+    #         keypoints = keypoints[:, :].reshape(-1, 2)
+    #         for p in range(keypoints.shape[0]):
+    #             # draw the keypoints
+    #             cv2.circle(frame, (int(keypoints[p, 0]), int(keypoints[p, 1])), 3, (0, 0, 255), thickness=-1, lineType=cv2.FILLED)
+    #             # uncomment the following lines if you want to put keypoint number
+    #             # cv2.putText(image, f"{p}", (int(keypoints[p, 0]+10), int(keypoints[p, 1]-5)),
+    #             #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    #         for ie, e in enumerate(self.edges):
+    #             # get different colors for the edges
+    #             rgb = matplotlib.colors.hsv_to_rgb([
+    #                 ie/float(len(self.edges)), 1.0, 1.0
+    #             ])
+    #             rgb = rgb*255
+    #             # join the keypoint pairs to draw the skeletal structure
+    #             cv2.line(frame, (keypoints[e, 0][0], keypoints[e, 1][0]),
+    #                     (keypoints[e, 0][1], keypoints[e, 1][1]),
+    #                     tuple(rgb), 2, lineType=cv2.LINE_AA)
+    #         else:
+    #             continue
+    #     return frame

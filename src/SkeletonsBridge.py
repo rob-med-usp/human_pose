@@ -4,11 +4,61 @@ class SkeletonsBridge:
     
     def __init__(self):
         
-        self.pos_upperbody = [2,3,6,7,8,9,10,11,12,13,14,15]
-    
-    #MPII to HM38M 2D-> pose 2d input
-    def MPIItoHM36M(self, keypoints2D_MPII):
+        # COCO
+        self.pairs_COCO = [
+        (0, 1), (0, 2), (2, 4), (1, 3), (6, 8), (8, 10),
+        (5, 7), (7, 9), (5, 11), (11, 13), (13, 15), (6, 12),
+        (12, 14), (14, 16), (5, 6)]
+
+        self.pairs_upper_COCO = [
+        (0, 1), (0, 2), (2, 4), (1, 3), (6, 8), (8, 10),
+        (5, 7), (7, 9), (5, 11), (6, 12), (5, 6)]
+
+        # OpenPoseCOCO
+        self.pairs_OpenPoseCOCO = [
+        (1,0),(1,2),(1,5),(2,3),(3,4),(5,6),(6,7),(1,8),
+        (8,9),(9,10),(1,11),(11,12),(12,13),(0,14),(0,15),(14,16),(15,17)]
         
+        self.pairs_upper_OpenPoseCOCO = [
+        (1,0),(1,2),(1,5),(2,3),(3,4),(5,6),(6,7),(1,8),(1,11),(0,14),(0,15),(14,16),(15,17)]
+
+        #MPII
+        #TODO: see if 7 is thorax or chest
+        self.pairs_MPII = [
+        (0,1),(1,2),(2,6),(6,3),(3,4),(4,5),(7,6),(8,7),(9,8),(7,12),(12,11),(11,10),(7,13),(13,14),(14,15)]
+        
+        self.pairs_upper_MPII = [
+        (2,6),(6,3),(7,6),(8,7),(9,8),(7,12),(12,11),(11,10),(7,13),(13,14),(14,15)]
+
+        #OpenPose MPII
+        self.pairs_OpenPoseMPII = [
+        (0,1),(1,2),(2,3),(3,4),(1,5),(5,6),(6,7),(1,14),(14,8),(8,9),(9,10),(14,11),(11,12),(12,13)]
+        
+        self.pairs_upper_OpenPoseMPII = [
+        (0,1),(1,2),(2,3),(3,4),(1,5),(5,6),(6,7),(1,14),(14,8),(14,11)]
+
+        #Human 3.6M 3D (with nose)
+        self.pairs_Human36M_full = [(0,1),(1,2),(2,3),(0,4),(4,5),(5,6),(0,7),(7,8),(8,9),
+        (9,10),(8,11),(11,12),(12,13),(8,14),(14,15),(15,16)]
+        
+        self.pairs_upper_Human3M_full = [(0,1),(0,4),(0,7),(7,8),(8,9),
+        (9,10),(8,11),(11,12),(12,13),(8,14),(14,15),(15,16)]
+
+        #Human 3.6M 2D (MPII compatible, without nose)
+        self.pairs_Human36M_noseless = [
+        (0,1),(1,2),(2,3),(0,4),(4,5),(5,6),(0,7),(7,8),(8,9),
+        (8,10),(10,11),(11,12),(8,13),(13,14),(14,15)]
+        
+        self.pairs_upper_Human36M_noseless = [
+        (0,1),(0,4),(0,7),(7,8),(8,9),
+        (8,10),(10,11),(11,12),(8,13),(13,14),(14,15)]
+        
+        self.frame_tick = 0
+    
+    #MPII to HM36M 2D-> pose 2d input
+    def MPIItoHM36M(self, keypoints2D_MPII):
+        # MPII: http://human-pose.mpi-inf.mpg.de/#download
+        #
         # Set array
         r_ankle      = keypoints2D_MPII[0] 
         r_knee       = keypoints2D_MPII[1] 
@@ -17,7 +67,8 @@ class SkeletonsBridge:
         l_knee       = keypoints2D_MPII[4] 
         l_ankle      = keypoints2D_MPII[5] 
         pelvis       = keypoints2D_MPII[6] 
-        upper_thorax = keypoints2D_MPII[7] 
+        # upper_thorax = keypoints2D_MPII[7]
+        thorax = keypoints2D_MPII[7] 
         upper_neck   = keypoints2D_MPII[8] 
         head_top     = keypoints2D_MPII[9] 
         r_wrist      = keypoints2D_MPII[10] 
@@ -27,9 +78,11 @@ class SkeletonsBridge:
         l_elbow      = keypoints2D_MPII[14] 
         l_wrist      = keypoints2D_MPII[15]
         
-        spine = upper_thorax + pelvis
-        spine = spine / 2
+        # spine = upper_thorax + pelvis
+        # spine = spine / 2
         
+        chest = upper_neck
+
         # Init H3.6M keypoints without nose
         keypoints2D_H36M = np.zeros((16,2))
         # Set array
@@ -40,8 +93,8 @@ class SkeletonsBridge:
         keypoints2D_H36M[4] = l_hip
         keypoints2D_H36M[5] = l_knee
         keypoints2D_H36M[6] = l_ankle
-        keypoints2D_H36M[7] = spine
-        keypoints2D_H36M[8] = upper_thorax
+        keypoints2D_H36M[7] = thorax
+        keypoints2D_H36M[8] = chest
         # neck/nose ignored  
         keypoints2D_H36M[9] = head_top
         keypoints2D_H36M[10] = l_shoulder
@@ -248,7 +301,7 @@ class SkeletonsBridge:
         
         return keypoints2D_MPII
     
-    def transformFromTo(self, persons2D_from, mode_from, mode_to):
+    def transformPersonsFromTo(self, persons2D_from, mode_from, mode_to):
         persons2D_to = []
         if mode_from == 'COCO' and mode_to == 'HM36M':
             for person2D in persons2D_from:
