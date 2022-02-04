@@ -17,7 +17,7 @@ class Fusion:
 
             dist = np.sqrt(ex**2 + ey**2 + ez**2)
 
-            if dist >= tresh | kptsRGBD[i] == [-1,-1,-1]:
+            if (dist >= tresh) or (-1 in kptsRGBD[i]):
                 kpts_merged[i] = kptsMLP[i]
             else:
                 kpts_merged[i] = kptsRGBD[i]

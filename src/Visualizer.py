@@ -5,36 +5,13 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot as plt
 import sys
 
-from src.SkeletonsBridge import SkeletonsBridge
+from SkeletonsBridge import SkeletonsBridge
 
 class Visualizer:
     
     def __init__(self):
         self.bridge = SkeletonsBridge()
-        # # Check if OS is win or not
-        # is_windows = sys.platform.startswith('win')
-        
-        # # if is_windows:
-        # #     mng.window.state('zoomed')
-        # # else:
-        # #     mng.resize(*mng.window.maxsize())  
-
-        # # Configuring modes
-        # mode_image = True
-        # mode_depth = True
-        # mode_plot3d = True
-
-        # plt.ion()
-        # self.fig = plt.figure()
-        # mng = plt.get_current_fig_manager()
-
-        # cols = 0
-        # if mode_image == True:
-        #     cols += 1
-        # if mode_depth == True:
-        #     cols += 1
-        # if mode_plot3d == True:
-        #     cols += 1
+        self.skeleton_color = 'dodgerblue'
     
     def init3D(self, total, pos, ground = False):
         # 3D plot axis
@@ -45,13 +22,14 @@ class Visualizer:
         self.ax3D.elev = -60
         # space around the persons
         RADIUS = 1500 
-        self.ax3D.set_xlim3d([-RADIUS, RADIUS])
-        self.ax3D.set_ylim3d([-RADIUS ,RADIUS])
-        self.ax3D.set_zlim3d([0, 2*RADIUS])
+        self.ax3D.set_xlim([-RADIUS, RADIUS])
+        self.ax3D.set_ylim([-RADIUS ,RADIUS])
+        self.ax3D.set_zlim([0, 2*RADIUS])
         
         self.ax3D.set_xlabel('x')
         self.ax3D.set_ylabel('y')
         self.ax3D.set_zlabel('z')
+        
 
         if ground:
             self.onlyGroundAx(self.ax3D)
@@ -102,8 +80,9 @@ class Visualizer:
                 point1 = tuple(person[part1].astype(int))
                 point2 = tuple(person[part2].astype(int))
                 # Draw lines
-                color = (np.random.randint(255),np.random.randint(255),np.random.randint(255))
-                cv2.line(image, point1, point2, color, 4)
+                # color = (np.random.randint(255),np.random.randint(255),np.random.randint(255))
+                color = (255,165,0)
+                cv2.line(image, point1, point2, color, 3)
     
     def drawPersonAxis(self, image, point_zero, points_axis):
         img = cv2.line(image, point_zero, tuple(np.array(points_axis[0].ravel(), np.uint)), (255,0,0), 5)
@@ -151,7 +130,7 @@ class Visualizer:
             
         for pair in pairs:
                 
-            if(keypoints3D[pair[0]] == [-1, -1] or keypoints3D[pair[1]] == [-1, -1]):
+            if(-1 in keypoints3D[pair[0]])  or (-1 in keypoints3D[pair[1]]):
                 continue
             
             x1 = keypoints3D[pair[0]][0]
@@ -163,7 +142,7 @@ class Visualizer:
             z2 = keypoints3D[pair[1]][2]
             
             # ax3D.plot([-x1, -x2],[-z1, -z2] ,[-y1, -y2])
-            ax3D.plot([x1, x2],[y1, y2], [z1, z2])
+            ax3D.plot([x1, x2],[y1, y2], [z1, z2], color = self.skeleton_color)
 
         # # Draw keypoints
         # x = np.array(x)
@@ -176,7 +155,8 @@ class Visualizer:
     
     def show(self, image, persons3D, depth=[], block = False, Disparity = False):
         
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_rgb = image
         self.axImage.imshow(image_rgb)
 
         if hasattr(self, 'axDepth'):
@@ -188,6 +168,14 @@ class Visualizer:
 
         if block is False:
             self.ax3D.clear()
+            self.ax3D.azim = -90
+            self.ax3D.dist = 10
+            self.ax3D.elev = -60
+            # space around the persons
+            RADIUS = 1500 
+            self.ax3D.set_xlim([-RADIUS, RADIUS])
+            self.ax3D.set_ylim([-RADIUS ,RADIUS])
+            self.ax3D.set_zlim([0, 2*RADIUS])
         
         #TODO
         upper_body = True
@@ -198,7 +186,14 @@ class Visualizer:
             pairs = self.bridge.pairs_Human36M_noseless
         
         # Plot keypoints 3D
+        # i = 0
         for person in persons3D:
+            # if i>=len(persons3D)/2:
+            #     self.skeleton_color="magenta"
+            # else:
+            #     self.skeleton_color="orange"
+            # i+=1
+
             self.ax3D = self.drawBones3D(self.ax3D, person, pairs, upper_body)
         
         # Display 3D plot

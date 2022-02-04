@@ -1,12 +1,14 @@
-from src import HydraPose
+from src.HydraPose import HydraPose, SEFFPOSE
 import cv2
 
-hy = HydraPose.HydraPose(pose3D = HydraPose.SEFFPOSE)
+hy = HydraPose(pose3D = SEFFPOSE)
 cam = cv2.VideoCapture(0)
+
+hy.initWindow()
 
 while True:
     ret, frame = cam.read()
 
     persons3D = hy.estimate3DPose(frame)
 
-    print(persons3D)
+    hy.plotPersons(frame, block=False)

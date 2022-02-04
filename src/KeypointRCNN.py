@@ -11,7 +11,7 @@ import time
 from PIL import Image
 from torchvision.transforms import transforms as transforms
 
-from src.SkeletonsBridge import *
+from SkeletonsBridge import *
 
 class KeypointRCNN:
 
@@ -66,7 +66,7 @@ class KeypointRCNN:
 
         return np.array(persons)
     
-    def _filterPersonsbyScore(self, persons, scores, min_thresh = 0.9):
+    def _filterPersonsbyScore(self, persons, scores, min_thresh = 0.4):
         persons_filtered = []
         for i in range(len(scores)):
             if scores[i] > min_thresh:

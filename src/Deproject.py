@@ -6,8 +6,13 @@ class Deprojector:
     
     def __init__(self):
         
-        self.intrinsics = self.loadCameraIntrinsics('webcam_acer')
-        self.distortion = self.loadCameraDistortion('webcam_acer')
+        # self.intrinsics = self.loadCameraIntrinsics('webcam_acer')
+        # self.distortion = self.loadCameraDistortion('webcam_acer')
+
+        self.intrinsics = np.array([[914.0999755859375, 0, 637.8196411132812],
+                                    [0, 914.7161254882812, 370.6839904785156],
+                                    [0, 0, 1]])
+        self.distortion = np.array([0.0,0.0,0.0,0.0,0.0])
         
     def loadCameraIntrinsics(self, camera_str):
         

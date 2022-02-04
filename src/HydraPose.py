@@ -1,15 +1,16 @@
 import numpy as np
 import cv2
+from enum import Enum
 
-from src.OpenPose import * 
-from src.KeypointRCNN import *
-from src.SeffPose import *
-from src.RealSense import *
-from src.SkeletonsBridge import *
-from src.Deproject import *
-from src.Fusion import *
-from src.Visualizer import *
-from src.RosHandler import *
+from OpenPose import * 
+from KeypointRCNN import *
+from SeffPose import *
+from RealSense import *
+from SkeletonsBridge import *
+from Deproject import *
+from Fusion import *
+from Visualizer import *
+from RosHandler import *
 
 OPENPOSE = 0
 KEYPOINTMASKRCNN = 1
@@ -21,6 +22,7 @@ class HydraPose:
 
     def __init__(self, pose2D = KEYPOINTMASKRCNN, pose3D = FULL, ros = False):
 
+        # Config atribs
         self.mode2D = pose2D
         self.mode3D = pose3D
         self.mode_ros = ros
@@ -28,6 +30,11 @@ class HydraPose:
         #OS type
         # Check if OS is win or not
         self.is_windows = sys.platform.startswith('win')
+
+        # Standard atribs
+        self.persons2D = None
+        self.persons3DHybrid  = None
+
         
         # Init architeture
         # Init pose 2D
@@ -48,6 +55,8 @@ class HydraPose:
         # Init pose 3D
         if self.mode3D == FULL:
             self.seff = SeffPose()
+            self.seff.defineModel()
+
             self.rlsns = RealSense()
             self.fus = Fusion()
             
@@ -100,9 +109,9 @@ class HydraPose:
             return []
         
         if self.mode3D == FULL:
-            persons3DRealsense = self.estimate3DPoseRealsense(self.persons2D)
-            persons3DSeffPose = self.estimate3DPoseSeffpose(self.persons2D, w, h)
-            self.persons3DHybrid = self.fuseResultsSeffPoseRealsense(persons3DRealsense, persons3DSeffPose)
+            self.persons3DRealsense = self.estimate3DPoseRealsense(self.persons2D)
+            self.persons3DSeffPose = self.estimate3DPoseSeffpose(self.persons2D, w, h)
+            self.persons3DHybrid = self.fuseResultsSeffPoseRealsense(self.persons3DRealsense, self.persons3DSeffPose)
 
         elif self.mode3D == SEFFPOSE:
             persons3DSeffPose = self.estimate3DPoseSeffpose(self.persons2D, w, h)
@@ -120,8 +129,10 @@ class HydraPose:
         for person2D in persons2D:
             person3D = self.rlsns.deprojectPose3D(person2D)
             persons3D.append(person3D)
+        # Meters to milimiter
+        persons3D = np.array(persons3D)*1000
         
-        return np.array(persons3D)
+        return persons3D
 
     def estimate3DPoseSeffpose(self, persons2D, w, h):
         
@@ -154,3 +165,24 @@ class HydraPose:
         self.viz.drawSkeleton(color_img, self.persons2D, upper_body= True)
         self.viz.show(color_img, self.persons3DHybrid, block = block)
         # self.viz.show(image,self.depth_img,self.persons3DHybrid, block = False)
+
+class Person:
+
+    def __init__(self, kpts2D = None, kpts3D = None):
+        self.kpts2D = kpts2D
+        self.kpts3D = kpts3D
+        self.frame = Frame.WORLD
+        self.id = None
+        self.name = None
+    
+    def transformFrame(self, frameTo):
+        pass 
+
+    def toSkeletonType(self):
+        pass
+
+class Frame(Enum):
+
+    WORLD = 0
+    ROBOT = 1
+    CAM = 2
