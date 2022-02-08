@@ -2,15 +2,15 @@ import numpy as np
 import cv2
 from enum import Enum
 
-from OpenPose import * 
-from KeypointRCNN import *
-from SeffPose import *
-from RealSense import *
-from SkeletonsBridge import *
-from Deproject import *
-from Fusion import *
-from Visualizer import *
-from RosHandler import *
+from .OpenPose import * 
+from .KeypointRCNN import *
+from .SeffPose import *
+from .RealSense import *
+from .SkeletonsBridge import *
+from .Deproject import *
+from .Fusion import *
+from .Visualizer import *
+from .RosHandler import *
 
 OPENPOSE = 0
 KEYPOINTMASKRCNN = 1

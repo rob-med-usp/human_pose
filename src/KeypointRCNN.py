@@ -11,7 +11,7 @@ import time
 from PIL import Image
 from torchvision.transforms import transforms as transforms
 
-from SkeletonsBridge import *
+from .SkeletonsBridge import *
 
 class KeypointRCNN:
 
