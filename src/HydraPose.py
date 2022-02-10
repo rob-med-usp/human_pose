@@ -92,12 +92,19 @@ class HydraPose:
 
         return self.color_img, self.depth_img
     
+    def setIntrinsics(self, intrinsics, distortion):
+        
+        assert(type(intrinsics).__module__ == np.__name__, "Instrinsics input must be a numpy array.")
+        assert(type(distortion).__module__ == np.__name__, "Distortion input must be a numpy array.")
+
+        self.deproj.intrinsics = intrinsics
+        self.deproj.distortion = distortion
+    
     def estimate3DPose(self, color_img):
 
         if(color_img is None):
             print("Image empty.")
             return
-
 
         h = color_img.shape[0]
         w = color_img.shape[1]
@@ -160,10 +167,10 @@ class HydraPose:
     def initWindow(self):
         self.viz.initWindows()
 
-    def plotPersons(self, color_img, block = True):
+    def plotPersons(self, color_img, mode='Human36M', block = True):
 
-        self.viz.drawSkeleton(color_img, self.persons2D, upper_body= True)
-        self.viz.show(color_img, self.persons3DHybrid, block = block)
+        self.viz.drawSkeleton(color_img, self.persons2D, mode=mode, upper_body=True)
+        self.viz.show(color_img, self.persons3DHybrid, block=block, mode=mode)
         # self.viz.show(image,self.depth_img,self.persons3DHybrid, block = False)
 
 class Person:

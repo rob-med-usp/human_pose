@@ -4,6 +4,10 @@ class SkeletonsBridge:
     
     def __init__(self):
         
+        self.MVOR_kpts = ["nose","neck","lshould","rshould","lhip","rhip","lelb","relb","lwri","rwris"]
+        
+        self.pairs_MVOR = [[0, 1],[1, 3],[3, 7],[3, 5],[7, 9],[1, 2],[2, 4],[2, 6],[6, 8],[4, 5]]
+
         # COCO
         self.pairs_COCO = [
         (0, 1), (0, 2), (2, 4), (1, 3), (6, 8), (8, 10),
