@@ -15,9 +15,7 @@ Two models implemented
 
 ## Installation
 1. Clone this repository
-```bash
-git clone https://github.com/rob-med-usp/human_pose.git
-```
+
 2. Install pytorch for your machine using the link:
 
 <https://pytorch.org/get-started/locally/>
