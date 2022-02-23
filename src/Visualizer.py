@@ -146,7 +146,7 @@ class Visualizer:
             
             # ax3D.plot([-x1, -x2],[-z1, -z2] ,[-y1, -y2])
             if not color:
-                ax3D.plot([x1, x2],[y1, y2], [z1, z2])
+                ax3D.plot([x1, x2],[y1, y2], [z1, z2], color = 'red')
             
             elif color:
                 ax3D.plot([x1, x2],[y1, y2], [z1, z2], color = color[idx])
@@ -198,7 +198,7 @@ class Visualizer:
             if not color:
                 self.ax3D = self.drawBones3D(self.ax3D, person, pairs)
             elif color:
-                self.ax3D = self.drawBones3D(self.ax3D, person, pairs,color=color)
+                self.ax3D = self.drawBones3D(self.ax3D, person, pairs, color=color)
         
         # Display 3D plot
         plt.show(block=block)

@@ -58,7 +58,62 @@ class SkeletonsBridge:
         (8,10),(10,11),(11,12),(8,13),(13,14),(14,15)]
         
         self.frame_tick = 0
+
+        self.the_bridge = []
     
+    def changeSkeletonType(self, personsFrom, typeFrom, typeTo, allow_estimation=False):
+        
+        num_of_persons = len(personsFrom)
+        fromBridge = self.the_bridge[typeFrom]
+        toBridge = self.the_bridge[typeTo]
+
+        num_of_joints_from = len(fromBridge)
+        num_of_joints_to = len(toBridge)
+
+        if num_of_joints_from != num_of_joints_to:
+            raise Exception("Two types doesnt match.")
+
+        personsTo = np.zeros(())
+        for idx, personFrom in enumerate(personsFrom):
+            pass
+    
+    def HM36MtoMVOR(self, keypoints3D_H36M):
+
+        # Set array
+        pelvis = keypoints3D_H36M[0] 
+        r_hip = keypoints3D_H36M[1] 
+        r_knee = keypoints3D_H36M[2] 
+        r_ankle = keypoints3D_H36M[3] 
+        l_hip = keypoints3D_H36M[4] 
+        l_knee = keypoints3D_H36M[5] 
+        l_ankle = keypoints3D_H36M[6] 
+        thorax = keypoints3D_H36M[7] 
+        # chest = keypoints3D_H36M[8] 
+        upper_neck = keypoints3D_H36M[8]
+        head_top = keypoints3D_H36M[9] 
+        l_shoulder = keypoints3D_H36M[10] 
+        l_elbow = keypoints3D_H36M[11] 
+        l_wrist = keypoints3D_H36M[12] 
+        r_shoulder = keypoints3D_H36M[13] 
+        r_elbow = keypoints3D_H36M[14] 
+        r_wrist = keypoints3D_H36M[15]
+
+        keypoints3D_MVOR = np.zeros((10,3))
+
+        # keypoints3D_MVOR[0] = nose # Right one
+        keypoints3D_MVOR[0] = head_top
+        keypoints3D_MVOR[1] = upper_neck
+        keypoints3D_MVOR[2] = l_shoulder
+        keypoints3D_MVOR[3] = r_shoulder
+        keypoints3D_MVOR[4] = l_hip
+        keypoints3D_MVOR[5] = r_hip
+        keypoints3D_MVOR[6] = l_elbow
+        keypoints3D_MVOR[7] = r_elbow
+        keypoints3D_MVOR[8] = l_wrist
+        keypoints3D_MVOR[9] = r_wrist
+
+        return keypoints3D_MVOR
+
     #MPII to HM36M 2D-> pose 2d input
     def MPIItoHM36M(self, keypoints2D_MPII):
         # MPII: http://human-pose.mpi-inf.mpg.de/#download
