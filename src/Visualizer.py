@@ -208,3 +208,27 @@ class Visualizer:
 
         if block is True:
             plt.pause(-1)
+        
+    def comparePlot3D(self, persons1, persons2):
+
+        fig = plt.figure()
+        ax3D = fig.add_subplot(1, 1, 1, projection = '3d')
+        # Set right visualization position 
+        ax3D.azim = -90
+        ax3D.dist = 10
+        ax3D.elev = -60
+        # space around the persons
+        RADIUS = 1500 
+        ax3D.set_xlim([-RADIUS, RADIUS])
+        ax3D.set_ylim([-RADIUS ,RADIUS])
+        ax3D.set_zlim([0, 2*RADIUS])
+
+        ax3D.set_xlabel('x')
+        ax3D.set_ylabel('y')
+        ax3D.set_zlabel('z')
+        viz = Visualizer()
+        for person in persons1[:,:10]:
+            ax3D = viz.drawBones3D(ax3D, person, self.bridge.pairs_MVOR, color=viz.camma_colors_skeleton)
+        for person in persons2[:,:10]:
+            ax3D = viz.drawBones3D(ax3D, person, self.bridge.pairs_MVOR)
+        plt.show()
