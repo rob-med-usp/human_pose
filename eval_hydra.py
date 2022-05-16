@@ -187,7 +187,7 @@ def runHydra(rgb_imgs, depth_imgs, cam, camma_mvor_gt):
     # Fusion
     persons_hy = np.zeros((persons.shape[0], 10, 3))
     for idx in range(len(persons_stereo)):
-        persons_hy[idx] = fus.mergeResults(persons_stereo[idx], persons_seff[idx])
+        persons_hy[idx] = fus.mergeResults(persons_stereo[idx], persons_seff[idx], thresh = 700)
     
     return persons_hy
 
@@ -201,7 +201,7 @@ def simulateAnnonPlot(imgs, persons2D_ann, persons3D_ann):
     hy.viz.ax3D.set_zlim(-200, 2200)
     hy.plotPersons(imgs[0].copy(), block=False, mode='MVOR')
 
-def comparePlot3D(img, persons1, persons2):
+def comparePlot3D(img, persons_hy, persons_ann):
     fig = plt.figure()
     # Plot image
     ax = fig.add_subplot(1,2,1)
@@ -221,9 +221,9 @@ def comparePlot3D(img, persons1, persons2):
     ax3D.set_ylabel('y')
     ax3D.set_zlabel('z')
     viz = Visualizer()
-    for person in persons1:
+    for person in persons_hy:
         ax3D = viz.drawBones3D(ax3D, person, bridge.pairs_MVOR, color=viz.camma_colors_skeleton)
-    for person in persons2:
+    for person in persons_ann:
         ax3D = viz.drawBones3D(ax3D, person, bridge.pairs_MVOR)
     plt.show()
 
@@ -238,15 +238,15 @@ def saveCurrState(mean_error, error_per_joint):
     mins = t.tm_min
     print(f'Finished evaluating at time {day}/{month}-{hour}:{mins}')
 
-    path = os.path.join('results',f'mean_error_{day}-{month}_{hour}:{mins}.npy')
+    path = os.path.join('results_tmp',f'mean_error_{day}-{month}_{hour}:{mins}.npy')
     with open(path, 'wb') as f:
         np.save(f, mean_error)
 
-    path = os.path.join('results',f'error_per_joint_{day}-{month}_{hour}:{mins}.npy')
+    path = os.path.join('results_tmp',f'error_per_joint_{day}-{month}_{hour}:{mins}.npy')
     with open(path, 'wb') as f:
         np.save(f, error_per_joint)
 
-def main():
+def main(viz=False):
 
     GT_ANNO_PATH = os.path.join(os.path.expanduser('~'), "soares_repo", "MVOR", "annotations/camma_mvor_2018.json")
     GT_IMGS_PATH = '/media/guisoares/guisoares-ext-hdd/Datasets/camma_mvor_dataset/'
@@ -269,6 +269,7 @@ def main():
             os.system('clear')
             print(f"Status: i = {i} total = {len_ids} progress = {round((i*100)/len_ids,3)}%")
             print(f"Last elapsed time: {round(elapsed_time,1)} s. Estimated time: {round((len_ids-i)*elapsed_time/3600,2)} h.")
+            print(f"Current mean error {mean_error.mean()}")
             print(f"Evaluating id={imid_3d}...")
 
             start = time.time()
@@ -302,6 +303,9 @@ def main():
             # input()
             # plt.close(fig)
             # input()
+            if viz:
+                comparePlot3D(rgb_imgs[0], persons, persons3D_ann)
+                input()
         
         saveCurrState(mean_error, error_per_joint)
 
@@ -310,4 +314,4 @@ def main():
         print(f"Saved array. Quiting.")
 
 if __name__ == '__main__':
-    main()
+    main(viz=False)
